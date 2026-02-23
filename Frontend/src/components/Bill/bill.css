@@ -1,0 +1,420 @@
+.bill-wrapper {
+  background: #f0f0f0;
+  padding: 20px;
+  font-family: "Times New Roman", serif;
+  display: flex;
+  justify-content: center;
+  position: relative;
+}
+
+.bill-actions {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  gap: 10px;
+}
+
+.bill-actions button {
+  padding: 5px 10px;
+  background: #38761d;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.bill-actions button:hover {
+  background: #2e5a16;
+}
+
+.share-container {
+  position: relative;
+}
+
+.share-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: white;
+  border: 1px solid #38761d;
+  border-radius: 3px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+  min-width: 100px;
+}
+
+.share-dropdown button {
+  display: block;
+  width: 100%;
+  padding: 8px 12px;
+  background: white;
+  color: #38761d;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.share-dropdown button:hover {
+  background: #f0f0f0;
+}
+
+.menu-container {
+  position: relative;
+}
+
+.menu-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: white;
+  border: 1px solid #38761d;
+  border-radius: 3px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+  min-width: 100px;
+}
+
+.menu-dropdown button {
+  display: block;
+  width: 100%;
+  padding: 8px 12px;
+  background: white;
+  color: #38761d;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.menu-dropdown button:hover {
+  background: #f0f0f0;
+}
+
+.search-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.search-modal {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  border: 1px solid #38761d;
+  max-width: 500px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.search-modal h3 {
+  margin-top: 0;
+  color: #38761d;
+  text-align: center;
+}
+
+.search-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin: 20px 0;
+}
+
+.search-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.search-input-group label {
+  font-weight: 600;
+  color: #38761d;
+}
+
+.search-input-group input {
+  padding: 8px;
+  border: 1px solid #38761d;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.search-buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.search-buttons button {
+  padding: 8px 16px;
+  background: #38761d;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.search-buttons button:hover {
+  background: #2e5a16;
+}
+
+.search-results {
+  border-top: 1px solid #38761d;
+  padding-top: 15px;
+}
+
+.search-results h4 {
+  margin: 0 0 10px 0;
+  color: #38761d;
+}
+
+.results-list {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.result-item {
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  background: #f9f9f9;
+}
+
+.result-item:hover {
+  background: #e8f5e8;
+}
+
+.result-item div {
+  margin: 2px 0;
+  font-size: 14px;
+}
+
+/* Bill paper */
+.bill-paper {
+  background: white;
+  padding: 20px 30px;
+  border: 1px solid #38761d;
+  width: 700px;
+  color: #38761d;
+  box-shadow: 0 0 8px rgba(56, 118, 29, 0.3);
+}
+
+/* Header */
+.bill-title {
+  font-size: 15px;
+  text-align: center;
+  margin: 0 0 5px 0;
+  font-weight: bold;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+
+.shop-name {
+  color: #c00000;        /* strong red */
+  font-size: 25px;
+  text-align: center;
+  margin-bottom: 3px;
+  padding-bottom: 10px;
+  font-weight: bold;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+
+.shop-subtitle {
+  text-align: center;
+  font-size: 15px;
+  margin: 0 0 5px 0;
+  font-style: italic;
+  font-weight: 600;
+}
+
+.contact {
+  text-align: center;
+  font-size: 14px;
+  margin-bottom: 15px;
+}
+
+/* Bill info */
+.bill-info-row {
+  display: flex;
+  justify-content: space-between;
+  border-top: 1px solid #38761d;
+  border-bottom: 1px solid #38761d;
+  padding: 8px 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.to-section {
+  margin-bottom: 10px;
+  border-bottom: none;
+  font-weight: normal;
+  font-style: italic;
+}
+
+/* Editable spans */
+.editable-span {
+  display: inline-block;
+  min-width: 50px;
+  outline: none;
+  direction: ltr !important;
+  white-space: nowrap;
+}
+
+.editable-span.wide {
+  min-width: 200px;
+}
+
+/* Table */
+.bill-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+.bill-table th,
+.bill-table td {
+  border: 1px solid #38761d;
+  padding: 1px 36px;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.bill-table th {
+  background-color: #d9ead3;
+  font-weight: 600;
+}
+
+/* Particulars column left aligned */
+.bill-table td:nth-child(2) {
+  text-align: left;
+  padding-left: 6px;
+}
+
+/* Qty and Price columns left aligned for better number input */
+.bill-table td:nth-child(3),
+.bill-table td:nth-child(4) {
+  text-align: left;
+  padding-left: 6px;
+}
+
+/* 🔥 CRITICAL FIX FOR contentEditable CELLS */
+.bill-table td[contenteditable="true"] {
+  outline: none;
+  cursor: text;
+  direction: ltr !important;
+  white-space: nowrap;
+}
+
+/* Total */
+.total-section {
+  display: flex;
+  justify-content: space-between;
+  border-top: 2px solid #38761d;
+  padding-top: 10px;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.note-section {
+  color: #c00000;        /* strong red */
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.total-amount {
+  font-size: 18px;
+  font-weight: bold;
+  text-align: right;
+  min-width: 150px;
+}
+
+/* Footer */
+.footer-sign {
+  margin-top: 30px;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: right;
+  font-style: italic;
+}
+
+/* Print (A4) */
+@media print {
+  @page {
+    size: A4;
+    margin: 10mm;
+  }
+
+  body {
+    background: white;
+    margin: 0;
+  }
+
+  .bill-wrapper {
+    padding: 0;
+  }
+
+  .bill-actions {
+    display: none;
+  }
+
+  .bill-paper {
+    width: 100%;
+    max-width: none;
+    box-shadow: none;
+    border: none;
+    margin: 0;
+    padding: 20px;
+    page-break-inside: avoid;
+  }
+
+  .bill-table {
+    page-break-inside: avoid;
+  }
+
+  .bill-table tbody {
+    page-break-inside: avoid;
+  }
+
+  .bill-table tr {
+    page-break-inside: avoid;
+  }
+}
+
+.editable-input {
+  border: none;
+  outline: none;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  font-family: inherit;
+  font-size: inherit;
+  display: inline;
+}
+.saved-bills-header {
+  position: absolute;
+  top: 15px;
+  left: 0;
+  width: 100%;
+  text-align: center;
+}
+
+.saved-bills-header h2 {
+  margin: 0;
+  font-size: 26px;
+  font-weight: bold;
+  color: #38761d;
+  letter-spacing: 1px;
+}

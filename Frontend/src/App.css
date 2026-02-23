@@ -1,0 +1,23 @@
+/* global overflow fix */
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;   /* stop horizontal overflow */
+}
+
+#root {
+  width: 100%;
+  overflow-x: hidden;
+}
+
+/* images/tables should not push layout */
+img {
+  max-width: 100%;
+  height: auto;
+}
