@@ -86,7 +86,7 @@ function Bill() {
   useEffect(() => {
     const run = async () => {
       // customers
-      fetch("https://vishnu-marketing-co.onrender.com/api/customers/all")
+      fetch("https://vishnu-marketing-co.onrender.com/api/bills/customers/all")
         .then((r) => r.json())
         .then((d) => setCustomers(Array.isArray(d) ? d : []))
         .catch(() => setCustomers([]));

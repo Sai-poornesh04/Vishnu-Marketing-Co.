@@ -34,17 +34,14 @@ const toNum = (v) => {
 const calcTotalAmount = (items = []) =>
   items.reduce((sum, it) => sum + toNum(it.qty) * toNum(it.price), 0);
 
-/* ✅ FIXED FROM LOCALHOST TO RENDER */
 const API = "https://vishnu-marketing-co.onrender.com/api/saved-bills";
 
 /* ===================== THUNKS ===================== */
-
 export const fetchAllSavedBills = createAsyncThunk(
   "savedBills/fetchAll",
   async (_, { rejectWithValue }) => {
     try {
-      /* ✅ FIXED: removed /all */
-      const res = await fetch(`${API}`);
+      const res = await fetch(`${API}/all`);
       const data = await safeJson(res, []);
       if (!res.ok) return rejectWithValue(data?.error || `HTTP ${res.status}`);
       return Array.isArray(data) ? data : [];
@@ -89,6 +86,7 @@ export const deleteSavedBillFromDB = createAsyncThunk(
   }
 );
 
+// ✅ NEW: update existing saved bill (PUT /api/saved-bills/:id)
 export const updateSavedBillInDB = createAsyncThunk(
   "savedBills/update",
   async ({ id, billData }, { dispatch, rejectWithValue }) => {
@@ -104,9 +102,7 @@ export const updateSavedBillInDB = createAsyncThunk(
         customerName: String(billData?.customerName ?? "").trim(),
         customerAddress: String(billData?.customerAddress ?? "").trim(),
         totalAmount:
-          billData?.totalAmount != null
-            ? toNum(billData.totalAmount)
-            : calcTotalAmount(itemsClean),
+          billData?.totalAmount != null ? toNum(billData.totalAmount) : calcTotalAmount(itemsClean),
         items: itemsClean
       };
 
@@ -185,6 +181,7 @@ const savedBillsSlice = createSlice({
         state.error = action.payload;
       })
 
+      // ✅ update handlers
       .addCase(updateSavedBillInDB.pending, (state) => {
         state.loading = true;
         state.error = null;

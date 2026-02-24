@@ -1,7 +1,6 @@
 // src/slice/customersSlice.jsx
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 
-/* ✅ FIXED FROM LOCALHOST TO RENDER */
 const API_BASE = "https://vishnu-marketing-co.onrender.com/api/customers";
 
 const safeJson = async (res, fallback) => {
@@ -158,6 +157,7 @@ const customersSlice = createSlice({
 
   extraReducers: (builder) => {
     builder
+      /* FETCH */
       .addCase(fetchCustomers.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -183,6 +183,7 @@ const customersSlice = createSlice({
         state.error = action.payload || "Failed to load customers";
       })
 
+      /* UPDATE */
       .addCase(updateCustomer.pending, (state) => {
         state.saving = true;
         state.error = null;
@@ -212,6 +213,7 @@ const customersSlice = createSlice({
         state.error = action.payload || "Customer update failed";
       })
 
+      /* SAVE ALL */
       .addCase(saveAllCustomers.pending, (state) => {
         state.saving = true;
         state.error = null;
