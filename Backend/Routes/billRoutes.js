@@ -6,8 +6,8 @@ const controller = require("../Controller/billController");
 router.post("/save", controller.saveBill);
 router.get("/all", controller.getAllBills);
 router.get("/search", controller.searchBills);
-router.put("/:id", controller.updateBill);
 router.get("/:id", controller.getBillById);
+router.put("/:id", controller.updateBill);
 router.delete("/:id", controller.deleteBill);
 
 module.exports = router;

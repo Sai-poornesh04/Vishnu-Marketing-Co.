@@ -1,29 +1,74 @@
 const db = require("../Config/db");
 
-exports.getAllCustomers = async (req, res) => {
+/* ===== GET ALL ===== */
+const getAllCustomers = async (req, res) => {
   try {
-    const result = await db.query(
-      `SELECT * FROM sp_customers($1)`,
-      ["GET_ALL"]
+    const { rows } = await db.query(
+      `SELECT id, customername, customeraddress
+       FROM customers
+       WHERE flag = 1
+       ORDER BY id ASC`
     );
-    res.json(result.rows);
+
+    res.json(rows);
   } catch (err) {
+    console.error("GET ALL CUSTOMERS ERROR 👉", err);
     res.status(500).json({ error: err.message });
   }
 };
 
-exports.updateCustomer = async (req, res) => {
+/* ===== GET BY ID ===== */
+const getCustomerById = async (req, res) => {
   try {
-    const { id } = req.params;
-    const { customerName, customerAddress } = req.body;
+    const id = parseInt(req.params.id, 10);
+    if (!id) return res.status(400).json({ message: "Invalid id" });
 
-    await db.query(
-      `SELECT * FROM sp_customers($1,$2,$3,$4)`,
-      ["UPDATE", id, customerName, customerAddress]
+    const { rows } = await db.query(
+      `SELECT id, customername, customeraddress
+       FROM customers
+       WHERE id = $1 AND flag = 1`,
+      [id]
     );
 
-    res.json({ message: "Updated successfully" });
+    if (!rows.length)
+      return res.status(404).json({ message: "Customer not found" });
+
+    res.json(rows[0]);
   } catch (err) {
+    console.error("GET CUSTOMER ERROR 👉", err);
     res.status(500).json({ error: err.message });
   }
+};
+
+/* ===== UPDATE ===== */
+const updateCustomer = async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (!id) return res.status(400).json({ message: "Invalid id" });
+
+    const { customerName, customerAddress } = req.body;
+
+    const { rows } = await db.query(
+      `UPDATE customers
+       SET customername = $1,
+           customeraddress = $2
+       WHERE id = $3
+       RETURNING id, customername, customeraddress`,
+      [customerName, customerAddress, id]
+    );
+
+    if (!rows.length)
+      return res.status(404).json({ message: "Customer not found" });
+
+    res.json(rows[0]);
+  } catch (err) {
+    console.error("UPDATE CUSTOMER ERROR 👉", err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
+module.exports = {
+  getAllCustomers,
+  getCustomerById,
+  updateCustomer
 };
