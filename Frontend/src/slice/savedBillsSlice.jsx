@@ -34,7 +34,7 @@ const toNum = (v) => {
 const calcTotalAmount = (items = []) =>
   items.reduce((sum, it) => sum + toNum(it.qty) * toNum(it.price), 0);
 
-/* ✅ FIXED API */
+/* ✅ FIXED FROM LOCALHOST TO RENDER */
 const API = "https://vishnu-marketing-co.onrender.com/api/saved-bills";
 
 /* ===================== THUNKS ===================== */
@@ -43,7 +43,8 @@ export const fetchAllSavedBills = createAsyncThunk(
   "savedBills/fetchAll",
   async (_, { rejectWithValue }) => {
     try {
-      const res = await fetch(`${API}`); // ✅ FIXED
+      /* ✅ FIXED: removed /all */
+      const res = await fetch(`${API}`);
       const data = await safeJson(res, []);
       if (!res.ok) return rejectWithValue(data?.error || `HTTP ${res.status}`);
       return Array.isArray(data) ? data : [];
@@ -63,7 +64,7 @@ export const searchSavedBillsFromDB = createAsyncThunk(
       if (fromDate) params.set("fromDate", toMysqlDate(fromDate));
       if (toDate) params.set("toDate", toMysqlDate(toDate));
 
-      const res = await fetch(`${API}/search?${params.toString()}`); // ✅ FIXED
+      const res = await fetch(`${API}/search?${params.toString()}`);
       const data = await safeJson(res, []);
       if (!res.ok) return rejectWithValue(data?.error || `HTTP ${res.status}`);
       return Array.isArray(data) ? data : [];
@@ -77,7 +78,7 @@ export const deleteSavedBillFromDB = createAsyncThunk(
   "savedBills/delete",
   async (id, { dispatch, rejectWithValue }) => {
     try {
-      const res = await fetch(`${API}/${id}`, { method: "DELETE" }); // ✅ FIXED
+      const res = await fetch(`${API}/${id}`, { method: "DELETE" });
       const data = await safeJson(res, {});
       if (!res.ok) return rejectWithValue(data?.error || `HTTP ${res.status}`);
       dispatch(fetchAllSavedBills());
@@ -113,7 +114,7 @@ export const updateSavedBillInDB = createAsyncThunk(
         return rejectWithValue("Invalid payload (billNo/billDate/customerId required)");
       }
 
-      const res = await fetch(`${API}/${safeId}`, { // ✅ FIXED
+      const res = await fetch(`${API}/${safeId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
@@ -129,8 +130,6 @@ export const updateSavedBillInDB = createAsyncThunk(
     }
   }
 );
-
-/* ===================== SLICE ===================== */
 
 const savedBillsSlice = createSlice({
   name: "savedBills",
