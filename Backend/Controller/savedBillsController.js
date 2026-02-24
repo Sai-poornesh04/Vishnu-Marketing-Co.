@@ -48,8 +48,8 @@ const getAllSavedBills = async (req, res) => {
   try {
     const result = await db.query(
       `SELECT * FROM sp_bills(
-        $1,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,
-        NULL,NULL,NULL,NULL,NULL
+       $1,$2,$3,$4,$5,$6,$7,$8,
+        $9,$10,$11,$12,$13,$14
       )`,
       ["GET_ALL"]
     );
@@ -70,8 +70,8 @@ const getSavedBillById = async (req, res) => {
 
     const result = await db.query(
       `SELECT * FROM sp_bills(
-        $1,$2,NULL,NULL,NULL,NULL,NULL,NULL,NULL,
-        NULL,NULL,NULL,NULL,NULL
+        $1,$2,$3,$4,$5,$6,$7,$8,
+        $9,$10,$11,$12,$13,$14
       )`,
       ["GET_BY_ID", id]
     );
@@ -92,8 +92,8 @@ const searchSavedBills = async (req, res) => {
   try {
     const result = await db.query(
       `SELECT * FROM sp_bills(
-        $1,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,
-        $2,$3,$4,$5,$6
+        $1,$2,$3,$4,$5,$6,$7,$8,
+        $9,$10,$11,$12,$13,$14
       )`,
       [
         "SEARCH",
@@ -121,8 +121,8 @@ const deleteSavedBill = async (req, res) => {
 
     await db.query(
       `SELECT * FROM sp_bills(
-        $1,$2,NULL,NULL,NULL,NULL,NULL,NULL,NULL,
-        NULL,NULL,NULL,NULL,NULL
+        $1,$2,$3,$4,$5,$6,$7,$8,
+        $9,$10,$11,$12,$13,$14
       )`,
       ["DELETE", id]
     );
@@ -167,7 +167,7 @@ const updateSavedBill = async (req, res) => {
     await db.query(
       `SELECT * FROM sp_bills(
         $1,$2,$3,$4,$5,$6,$7,$8,
-        NULL,NULL,NULL,NULL,NULL
+        $9,$10,$11,$12,$13,$14
       )`,
       [
         "UPDATE",

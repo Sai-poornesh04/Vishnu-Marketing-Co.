@@ -87,8 +87,8 @@ const saveBill = async (req, res) => {
 
     const result = await db.query(
       `SELECT * FROM sp_bills(
-        $1,$2,$3,$4,$5,$6,$7,$8,
-        NULL,NULL,NULL,NULL,NULL
+       $1,$2,$3,$4,$5,$6,$7,$8,
+        $9,$10,$11,$12,$13,$14
       )`,
       [
         "INSERT",
@@ -120,7 +120,7 @@ const updateBill = async (req, res) => {
     await db.query(
       `SELECT * FROM sp_bills(
         $1,$2,$3,$4,$5,$6,$7,$8,
-        NULL,NULL,NULL,NULL,NULL
+        $9,$10,$11,$12,$13,$14
       )`,
       [
         "UPDATE",
@@ -146,8 +146,8 @@ const getBillById = async (req, res) => {
   try {
     const result = await db.query(
       `SELECT * FROM sp_bills(
-        $1,$2,NULL,NULL,NULL,NULL,NULL,NULL,NULL,
-        NULL,NULL,NULL,NULL,NULL
+        $1,$2,$3,$4,$5,$6,$7,$8,
+        $9,$10,$11,$12,$13,$14
       )`,
       ["GET_BY_ID", toIntOrNull(req.params.id)]
     );
@@ -166,8 +166,8 @@ const getAllBills = async (req, res) => {
   try {
     const result = await db.query(
       `SELECT * FROM sp_bills(
-        $1,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,
-        NULL,NULL,NULL,NULL,NULL
+        $1,$2,$3,$4,$5,$6,$7,$8,
+        $9,$10,$11,$12,$13,$14
       )`,
       ["GET_ALL"]
     );
@@ -183,8 +183,8 @@ const searchBills = async (req, res) => {
   try {
     const result = await db.query(
       `SELECT * FROM sp_bills(
-        $1,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,
-        $2,$3,$4,$5,$6
+        $1,$2,$3,$4,$5,$6,$7,$8,
+        $9,$10,$11,$12,$13,$14
       )`,
       [
         "SEARCH",
@@ -207,8 +207,8 @@ const deleteBill = async (req, res) => {
   try {
     await db.query(
       `SELECT * FROM sp_bills(
-        $1,$2,NULL,NULL,NULL,NULL,NULL,NULL,NULL,
-        NULL,NULL,NULL,NULL,NULL
+        $1,$2,$3,$4,$5,$6,$7,$8,
+        $9,$10,$11,$12,$13,$14
       )`,
       ["DELETE", toIntOrNull(req.params.id)]
     );
