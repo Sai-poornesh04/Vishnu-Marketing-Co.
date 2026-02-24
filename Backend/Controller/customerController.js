@@ -41,7 +41,7 @@ const getCustomerById = async (req, res) => {
 const getAllCustomers = async (req, res) => {
   try {
     const result = await db.query(
-      `SELECT * FROM sp_customers($1,$2,$3)`,
+      `SELECT * FROM sp_customers($1,NULL,NULL)`,
       ["GET_ALL"]
     );
 
