@@ -1,91 +1,124 @@
 const db = require("../Config/db");
 
-const safeJson = (v, fallback = []) => {
+// -------------------- Helpers --------------------
+
+const safeJson = (v, fallback) => {
   try {
     if (!v) return fallback;
-    if (typeof v === "string") return JSON.parse(v);
-    return v;
+    return typeof v === "string" ? JSON.parse(v) : v;
   } catch {
     return fallback;
   }
 };
 
+const toSqlDate = (v) => {
+  const s = String(v || "").trim();
+  if (!s) return null;
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+
+  if (/^\d{1,2}-\d{1,2}-\d{4}$/.test(s)) {
+    const [dd, mm, yyyy] = s.split("-");
+    return `${yyyy}-${String(mm).padStart(2, "0")}-${String(dd).padStart(2, "0")}`;
+  }
+
+  return s;
+};
+
 const toIntOrNull = (v) => {
-  const n = Number(String(v ?? "").trim());
+  const n = Number(v);
   return Number.isFinite(n) && n > 0 ? Math.trunc(n) : null;
 };
 
-// -------------------- SAVE BILL --------------------
-exports.saveBill = async (req, res) => {
+const toNumOrZero = (v) => {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : 0;
+};
+
+const cleanItems = (items) => {
+  const arr = Array.isArray(items) ? items : [];
+  return arr
+    .map((it) => ({
+      name: String(it?.name ?? "").trim(),
+      qty: String(it?.qty ?? "").trim(),
+      price: String(it?.price ?? "").trim(),
+    }))
+    .filter((it) => it.name || it.qty || it.price);
+};
+
+const calcTotalAmount = (items) =>
+  items.reduce((sum, it) => {
+    return sum + toNumOrZero(it.qty) * toNumOrZero(it.price);
+  }, 0);
+
+// -------------------- Bills --------------------
+
+const saveBill = async (req, res) => {
   try {
     const {
       billNo,
       billDate,
+      date,
       customerId,
       customerName,
       customerAddress,
       totalAmount,
-      items
+      items,
     } = req.body;
+
+    const itemsClean = cleanItems(items);
+    const total =
+      totalAmount != null
+        ? toNumOrZero(totalAmount)
+        : calcTotalAmount(itemsClean);
 
     const result = await db.query(
       `SELECT * FROM sp_bills(
-        $1,$2,$3,$4,$5,$6,$7,$8,$9,
-        $10,$11,$12,$13,$14
+        $1,$2,$3,$4,$5,$6,$7,$8,
+        NULL,NULL,NULL,NULL,NULL
       )`,
       [
         "INSERT",
         null,
         billNo,
-        billDate,
-        customerId,
+        toSqlDate(billDate ?? date),
+        toIntOrNull(customerId),
         customerName,
         customerAddress,
-        totalAmount,
-        JSON.stringify(items),
-        null,null,null,null,null
+        total,
+        JSON.stringify(itemsClean),
       ]
     );
 
-    res.json({ message: "Bill saved", data: result.rows[0] });
+    res.json({
+      message: "Bill saved successfully",
+      id: result.rows[0]?.id ?? null,
+    });
   } catch (err) {
-    console.error("SAVE ERROR 👉", err);
+    console.error("INSERT ERROR 👉", err);
     res.status(500).json({ error: err.message });
   }
 };
 
-// -------------------- UPDATE BILL --------------------
-exports.updateBill = async (req, res) => {
+const updateBill = async (req, res) => {
   try {
     const id = toIntOrNull(req.params.id);
-    if (!id) return res.status(400).json({ message: "Invalid id" });
 
-    const {
-      billNo,
-      billDate,
-      customerId,
-      customerName,
-      customerAddress,
-      totalAmount,
-      items
-    } = req.body;
-
-    await db.query(
+    const result = await db.query(
       `SELECT * FROM sp_bills(
-        $1,$2,$3,$4,$5,$6,$7,$8,$9,
-        $10,$11,$12,$13,$14
+        $1,$2,$3,$4,$5,$6,$7,$8,
+        NULL,NULL,NULL,NULL,NULL
       )`,
       [
         "UPDATE",
         id,
-        billNo,
-        billDate,
-        customerId,
-        customerName,
-        customerAddress,
-        totalAmount,
-        JSON.stringify(items),
-        null,null,null,null,null
+        req.body.billNo,
+        toSqlDate(req.body.billDate),
+        req.body.customerId,
+        req.body.customerName,
+        req.body.customerAddress,
+        toNumOrZero(req.body.totalAmount),
+        JSON.stringify(req.body.items || []),
       ]
     );
 
@@ -96,42 +129,21 @@ exports.updateBill = async (req, res) => {
   }
 };
 
-// -------------------- GET ALL --------------------
-exports.getAllBills = async (req, res) => {
+const getBillById = async (req, res) => {
   try {
     const result = await db.query(
-      `SELECT * FROM sp_bills($1)`,
-      ["GET_ALL"]
-    );
-
-    res.json(
-      result.rows.map(b => ({
-        ...b,
-        billtable: safeJson(b.billtable)
-      }))
-    );
-  } catch (err) {
-    console.error("GET_ALL ERROR 👉", err);
-    res.status(500).json({ error: err.message });
-  }
-};
-
-// -------------------- GET BY ID --------------------
-exports.getBillById = async (req, res) => {
-  try {
-    const id = toIntOrNull(req.params.id);
-    if (!id) return res.status(400).json({ message: "Invalid id" });
-
-    const result = await db.query(
-      `SELECT * FROM sp_bills($1,$2)`,
-      ["GET_BY_ID", id]
+      `SELECT * FROM sp_bills(
+        $1,$2,NULL,NULL,NULL,NULL,NULL,NULL,NULL,
+        NULL,NULL,NULL,NULL,NULL
+      )`,
+      ["GET_BY_ID", toIntOrNull(req.params.id)]
     );
 
     if (!result.rows.length)
       return res.status(404).json({ message: "Bill not found" });
 
     const bill = result.rows[0];
-    bill.billtable = safeJson(bill.billtable);
+    bill.billtable = safeJson(bill.billtable, []);
 
     res.json(bill);
   } catch (err) {
@@ -140,38 +152,49 @@ exports.getBillById = async (req, res) => {
   }
 };
 
-// -------------------- SEARCH --------------------
-exports.searchBills = async (req, res) => {
+const getAllBills = async (req, res) => {
   try {
-    const {
-      billNo,
-      customerName,
-      customerId,
-      fromDate,
-      toDate
-    } = req.query;
-
     const result = await db.query(
       `SELECT * FROM sp_bills(
-        $1,$2,$3,$4,$5,$6,$7,$8,$9,
-        $10,$11,$12,$13,$14
+        $1,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,
+        NULL,NULL,NULL,NULL,NULL
+      )`,
+      ["GET_ALL"]
+    );
+
+    res.json(
+      result.rows.map((b) => ({
+        ...b,
+        billtable: safeJson(b.billtable, []),
+      }))
+    );
+  } catch (err) {
+    console.error("GET_ALL ERROR 👉", err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
+const searchBills = async (req, res) => {
+  try {
+    const result = await db.query(
+      `SELECT * FROM sp_bills(
+        $1,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,
+        $2,$3,$4,$5,$6
       )`,
       [
         "SEARCH",
-        null,
-        null,null,null,null,null,null,null,
-        billNo || null,
-        customerName || null,
-        customerId || null,
-        fromDate || null,
-        toDate || null
+        req.query.billNo || null,
+        req.query.customerName || null,
+        req.query.customerId ? Number(req.query.customerId) : null,
+        req.query.fromDate || null,
+        req.query.toDate || null,
       ]
     );
 
     res.json(
-      result.rows.map(b => ({
+      result.rows.map((b) => ({
         ...b,
-        billtable: safeJson(b.billtable)
+        billtable: safeJson(b.billtable, []),
       }))
     );
   } catch (err) {
@@ -180,41 +203,28 @@ exports.searchBills = async (req, res) => {
   }
 };
 
-// -------------------- DELETE --------------------
-exports.deleteBill = async (req, res) => {
+const deleteBill = async (req, res) => {
   try {
-    const id = toIntOrNull(req.params.id);
-    if (!id) return res.status(400).json({ message: "Invalid id" });
-
     await db.query(
-      `SELECT * FROM sp_bills($1,$2)`,
-      ["DELETE", id]
+      `SELECT * FROM sp_bills(
+        $1,$2,NULL,NULL,NULL,NULL,NULL,NULL,NULL,
+        NULL,NULL,NULL,NULL,NULL
+      )`,
+      ["DELETE", toIntOrNull(req.params.id)]
     );
 
-    res.json({ message: "Deleted successfully" });
+    res.json({ message: "Bill deleted successfully" });
   } catch (err) {
     console.error("DELETE ERROR 👉", err);
     res.status(500).json({ error: err.message });
   }
 };
 
-// -------------------- CUSTOMER BY ID --------------------
-exports.getCustomerById = async (req, res) => {
-  try {
-    const id = toIntOrNull(req.params.id);
-    if (!id) return res.status(400).json({ message: "Invalid customer id" });
-
-    const result = await db.query(
-      `SELECT * FROM sp_getCustomerById($1)`,
-      [id]
-    );
-
-    if (!result.rows.length)
-      return res.status(404).json(null);
-
-    res.json(result.rows[0]);
-  } catch (err) {
-    console.error("CUSTOMER FETCH ERROR 👉", err);
-    res.status(500).json({ error: err.message });
-  }
+module.exports = {
+  saveBill,
+  updateBill,
+  getBillById,
+  getAllBills,
+  searchBills,
+  deleteBill,
 };
