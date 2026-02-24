@@ -37,6 +37,9 @@ const makeInitialItems = () => {
 
 /* ===================== API ===================== */
 const API_BASE = "https://vishnu-marketing-co.onrender.com/api/bills";
+const API_ROOT = "https://vishnu-marketing-co.onrender.com/api";
+
+
 const API_SAVED = "https://vishnu-marketing-co.onrender.com/api/saved-bills"; // ✅ update/edit target
 
 /* ===================== HELPERS ===================== */
@@ -267,7 +270,7 @@ export const fetchCustomerById = createAsyncThunk(
       const safeId = digitsOnly(id);
       if (!safeId) return null;
 
-      const res = await fetch(`${API_BASE}/customers/${safeId}`);
+      const res = await fetch(`${API_ROOT}/customers/${safeId}`);
       if (res.status === 404) return null;
 
       const data = await safeJson(res, {});
