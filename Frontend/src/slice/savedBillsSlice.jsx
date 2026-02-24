@@ -34,14 +34,16 @@ const toNum = (v) => {
 const calcTotalAmount = (items = []) =>
   items.reduce((sum, it) => sum + toNum(it.qty) * toNum(it.price), 0);
 
-const API = "https://vishnu-marketing-co.onrender.com/api/";
+/* ✅ FIXED API */
+const API = "https://vishnu-marketing-co.onrender.com/api/saved-bills";
 
 /* ===================== THUNKS ===================== */
+
 export const fetchAllSavedBills = createAsyncThunk(
   "savedBills/fetchAll",
   async (_, { rejectWithValue }) => {
     try {
-      const res = await fetch(`${API}/all`);
+      const res = await fetch(`${API}`); // ✅ FIXED
       const data = await safeJson(res, []);
       if (!res.ok) return rejectWithValue(data?.error || `HTTP ${res.status}`);
       return Array.isArray(data) ? data : [];
@@ -61,7 +63,7 @@ export const searchSavedBillsFromDB = createAsyncThunk(
       if (fromDate) params.set("fromDate", toMysqlDate(fromDate));
       if (toDate) params.set("toDate", toMysqlDate(toDate));
 
-      const res = await fetch(`${API}/search?${params.toString()}`);
+      const res = await fetch(`${API}/search?${params.toString()}`); // ✅ FIXED
       const data = await safeJson(res, []);
       if (!res.ok) return rejectWithValue(data?.error || `HTTP ${res.status}`);
       return Array.isArray(data) ? data : [];
@@ -75,7 +77,7 @@ export const deleteSavedBillFromDB = createAsyncThunk(
   "savedBills/delete",
   async (id, { dispatch, rejectWithValue }) => {
     try {
-      const res = await fetch(`${API}/${id}`, { method: "DELETE" });
+      const res = await fetch(`${API}/${id}`, { method: "DELETE" }); // ✅ FIXED
       const data = await safeJson(res, {});
       if (!res.ok) return rejectWithValue(data?.error || `HTTP ${res.status}`);
       dispatch(fetchAllSavedBills());
@@ -86,7 +88,6 @@ export const deleteSavedBillFromDB = createAsyncThunk(
   }
 );
 
-// ✅ NEW: update existing saved bill (PUT /api/saved-bills/:id)
 export const updateSavedBillInDB = createAsyncThunk(
   "savedBills/update",
   async ({ id, billData }, { dispatch, rejectWithValue }) => {
@@ -102,7 +103,9 @@ export const updateSavedBillInDB = createAsyncThunk(
         customerName: String(billData?.customerName ?? "").trim(),
         customerAddress: String(billData?.customerAddress ?? "").trim(),
         totalAmount:
-          billData?.totalAmount != null ? toNum(billData.totalAmount) : calcTotalAmount(itemsClean),
+          billData?.totalAmount != null
+            ? toNum(billData.totalAmount)
+            : calcTotalAmount(itemsClean),
         items: itemsClean
       };
 
@@ -110,7 +113,7 @@ export const updateSavedBillInDB = createAsyncThunk(
         return rejectWithValue("Invalid payload (billNo/billDate/customerId required)");
       }
 
-      const res = await fetch(`${API}/${safeId}`, {
+      const res = await fetch(`${API}/${safeId}`, { // ✅ FIXED
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
@@ -126,6 +129,8 @@ export const updateSavedBillInDB = createAsyncThunk(
     }
   }
 );
+
+/* ===================== SLICE ===================== */
 
 const savedBillsSlice = createSlice({
   name: "savedBills",
@@ -181,7 +186,6 @@ const savedBillsSlice = createSlice({
         state.error = action.payload;
       })
 
-      // ✅ update handlers
       .addCase(updateSavedBillInDB.pending, (state) => {
         state.loading = true;
         state.error = null;
