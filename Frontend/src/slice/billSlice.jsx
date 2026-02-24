@@ -36,8 +36,8 @@ const makeInitialItems = () => {
 };
 
 /* ===================== API ===================== */
-const API_BASE = "http://localhost:5000/api/bills";
-const API_SAVED = "http://localhost:5000/api/saved-bills"; // ✅ update/edit target
+const API_BASE = "https://vishnu-marketing-co.onrender.com/api/bills";
+const API_SAVED = "https://vishnu-marketing-co.onrender.com/api/saved-bills"; // ✅ update/edit target
 
 /* ===================== HELPERS ===================== */
 const safeJson = async (res, fallback) => {

@@ -1,7 +1,7 @@
 // src/slice/customersSlice.jsx
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 
-const API_BASE = "http://localhost:5000/api/customers";
+const API_BASE = "https://vishnu-marketing-co.onrender.com/api/customers";
 
 const safeJson = async (res, fallback) => {
   try {

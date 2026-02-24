@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./customer.css";
 
-const API = "http://localhost:5000/api/customers";
+const API = "https://vishnu-marketing-co.onrender.com/api/customers";
 
 export default function Customers() {
   const navigate = useNavigate();
