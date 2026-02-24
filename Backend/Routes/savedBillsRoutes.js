@@ -1,11 +1,20 @@
 const express = require("express");
 const router = express.Router();
-const controller = require("../Controller/savedBillsController");
+const savedBillsController = require("../Controller/savedBillsController");
 
-router.get("/all", controller.getAllSavedBills);
-router.get("/search", controller.searchSavedBills);
-router.get("/:id", controller.getSavedBillById);
-router.put("/:id", controller.updateSavedBill);
-router.delete("/:id", controller.deleteSavedBill);
+// GET all saved bills
+router.get("/all", savedBillsController.getAllSavedBills);
+
+// SEARCH saved bills
+router.get("/search", savedBillsController.searchSavedBills);
+
+// GET single bill by id
+router.get("/:id", savedBillsController.getSavedBillById);
+
+// UPDATE existing saved bill  ✅
+router.put("/:id", savedBillsController.updateSavedBill);
+
+// DELETE saved bill
+router.delete("/:id", savedBillsController.deleteSavedBill);
 
 module.exports = router;
