@@ -1,32 +1,29 @@
 const db = require("../Config/db");
 
-const toIntOrNull = (v) => {
-  const n = Number(String(v ?? "").trim());
-  if (!Number.isFinite(n)) return null;
-  const i = Math.trunc(n);
-  return i > 0 ? i : null;
+exports.getAllCustomers = async (req, res) => {
+  try {
+    const result = await db.query(
+      `SELECT * FROM sp_customers($1)`,
+      ["GET_ALL"]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
 
-const getAllCustomers = (req, res) => {
-  const sql = `CALL sp_customers('GET_ALL', NULL, NULL, NULL)`;
-  db.query(sql, (err, result) => {
-    if (err) return res.status(500).json({ error: err.sqlMessage || err.message });
-    res.json(result?.[0] || []);
-  });
+exports.updateCustomer = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { customerName, customerAddress } = req.body;
+
+    await db.query(
+      `SELECT * FROM sp_customers($1,$2,$3,$4)`,
+      ["UPDATE", id, customerName, customerAddress]
+    );
+
+    res.json({ message: "Updated successfully" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
-
-const updateCustomer = (req, res) => {
-  const idNum = toIntOrNull(req.params.id);
-  if (!idNum) return res.status(400).json({ message: "Invalid customer id" });
-
-  const customerName = String(req.body.customerName ?? "").trim();
-  const customerAddress = String(req.body.customerAddress ?? "").trim();
-
-  const sql = `CALL sp_customers('UPDATE', ?, ?, ?)`;
-  db.query(sql, [idNum, customerName, customerAddress], (err) => {
-    if (err) return res.status(500).json({ error: err.sqlMessage || err.message });
-    res.json({ id: idNum, customerName, customerAddress });
-  });
-};
-
-module.exports = { getAllCustomers, updateCustomer };

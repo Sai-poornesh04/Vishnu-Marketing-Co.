@@ -1,13 +1,12 @@
 const jwt = require("jsonwebtoken");
 
-exports.login = (req, res) => {
+exports.login = async (req, res) => {
   const { username, password } = req.body;
 
-  // Default credentials
   if (username === "admin" && password === "admin") {
     const token = jwt.sign(
       { username },
-      process.env.JWT_SECRET || "secretkey",
+      process.env.JWT_SECRET,
       { expiresIn: "1h" }
     );
 
