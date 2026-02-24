@@ -1,4 +1,6 @@
+// src/slice/billSlice.jsx
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import API from "../api/api";
 
 /* ===================== ITEMS ===================== */
 const baseItems = [
@@ -35,18 +37,9 @@ const makeInitialItems = () => {
   ];
 };
 
-/* ===================== API ===================== */
-const API_BASE = "https://vishnu-marketing-co.onrender.com/api/bills";
-const API_SAVED = "https://vishnu-marketing-co.onrender.com/api/saved-bills"; // ✅ update/edit target
-
 /* ===================== HELPERS ===================== */
-const safeJson = async (res, fallback) => {
-  try {
-    return await res.json();
-  } catch {
-    return fallback;
-  }
-};
+const apiErr = (e, fallback = "Request failed") =>
+  e?.response?.data?.message || e?.response?.data?.error || e?.message || fallback;
 
 const digitsOnly = (v) => String(v ?? "").replace(/\D/g, "");
 
@@ -59,7 +52,7 @@ const toMysqlDate = (v) => {
     const [dd, mm, yyyy] = s.split("-");
     return `${yyyy}-${String(mm).padStart(2, "0")}-${String(dd).padStart(2, "0")}`;
   }
-  return s; // fallback
+  return s;
 };
 
 const toNum = (v) => {
@@ -143,7 +136,7 @@ const normalizeRange = (fromDate, toDate) => {
   return { from: from || "", to: to || "" };
 };
 
-/* ===================== THUNKS ===================== */
+/* ===================== THUNKS (AXIOS API) ===================== */
 export const saveBillToDB = createAsyncThunk(
   "bill/saveBillToDB",
   async (billData, { dispatch, rejectWithValue }) => {
@@ -154,24 +147,15 @@ export const saveBillToDB = createAsyncThunk(
         return rejectWithValue("Invalid payload (billNo/billDate/customerId/items required)");
       }
 
-      const res = await fetch(`${API_BASE}/save`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
-
-      const data = await safeJson(res, {});
-      if (!res.ok) return rejectWithValue(data?.message || data?.error || `HTTP ${res.status}`);
-
+      const { data } = await API.post("/api/bills/save", payload);
       dispatch(fetchSavedBills());
       return data;
-    } catch (err) {
-      return rejectWithValue(err.message);
+    } catch (e) {
+      return rejectWithValue(apiErr(e));
     }
   }
 );
 
-// ✅ ADD THIS: update existing saved bill (PUT /api/saved-bills/:id)
 export const updateBillToDB = createAsyncThunk(
   "bill/updateBillToDB",
   async ({ id, billData }, { dispatch, rejectWithValue }) => {
@@ -185,19 +169,11 @@ export const updateBillToDB = createAsyncThunk(
         return rejectWithValue("Invalid payload (billNo/billDate/customerId/items required)");
       }
 
-      const res = await fetch(`${API_SAVED}/${safeId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
-
-      const data = await safeJson(res, {});
-      if (!res.ok) return rejectWithValue(data?.message || data?.error || `HTTP ${res.status}`);
-
+      const { data } = await API.put(`/api/saved-bills/${safeId}`, payload);
       dispatch(fetchSavedBills());
       return data;
-    } catch (err) {
-      return rejectWithValue(err.message);
+    } catch (e) {
+      return rejectWithValue(apiErr(e));
     }
   }
 );
@@ -206,12 +182,10 @@ export const fetchSavedBills = createAsyncThunk(
   "bill/fetchSavedBills",
   async (_, { rejectWithValue }) => {
     try {
-      const res = await fetch(`${API_BASE}/all`);
-      const data = await safeJson(res, []);
-      if (!res.ok) return rejectWithValue(data?.message || data?.error || `HTTP ${res.status}`);
+      const { data } = await API.get("/api/bills/all");
       return Array.isArray(data) ? data : [];
-    } catch (err) {
-      return rejectWithValue(err.message);
+    } catch (e) {
+      return rejectWithValue(apiErr(e));
     }
   }
 );
@@ -243,19 +217,16 @@ export const searchBillsFromDB = createAsyncThunk(
 
       const range = normalizeRange(f, t);
 
-      const params = new URLSearchParams();
-      if (billNo) params.set("billNo", String(billNo).trim());
-      if (customerId) params.set("customerId", digitsOnly(customerId));
-      if (range.from) params.set("fromDate", range.from);
-      if (range.to) params.set("toDate", range.to);
+      const params = {};
+      if (billNo) params.billNo = String(billNo).trim();
+      if (customerId) params.customerId = digitsOnly(customerId);
+      if (range.from) params.fromDate = range.from;
+      if (range.to) params.toDate = range.to;
 
-      const res = await fetch(`${API_BASE}/search?${params.toString()}`);
-      const data = await safeJson(res, []);
-      if (!res.ok) return rejectWithValue(data?.message || data?.error || `HTTP ${res.status}`);
-
+      const { data } = await API.get("/api/bills/search", { params });
       return Array.isArray(data) ? data : [];
-    } catch (err) {
-      return rejectWithValue(err.message);
+    } catch (e) {
+      return rejectWithValue(apiErr(e));
     }
   }
 );
@@ -267,15 +238,11 @@ export const fetchCustomerById = createAsyncThunk(
       const safeId = digitsOnly(id);
       if (!safeId) return null;
 
-      const res = await fetch(`${API_BASE}/customers/${safeId}`);
-      if (res.status === 404) return null;
-
-      const data = await safeJson(res, {});
-      if (!res.ok) return rejectWithValue(data?.message || data?.error || "Customer fetch failed");
-
-      return data;
-    } catch (err) {
-      return rejectWithValue(err.message);
+      const { data } = await API.get(`/api/bills/customers/${safeId}`);
+      return data || null;
+    } catch (e) {
+      if (e?.response?.status === 404) return null;
+      return rejectWithValue(apiErr(e, "Customer fetch failed"));
     }
   }
 );
@@ -341,11 +308,9 @@ const billSlice = createSlice({
 
     updateItem(state, action) {
       const { index, field, value } = action.payload;
-      const ROWS = 30;
 
       if (index < 0 || index >= ROWS) return;
 
-      // ensure exact 30
       if (!Array.isArray(state.items) || state.items.length !== ROWS) {
         state.items = makeInitialItems();
       }

@@ -1,44 +1,27 @@
 // src/slice/customersSlice.jsx
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-
-const API_BASE = "https://vishnu-marketing-co.onrender.com/api/customers";
-
-const safeJson = async (res, fallback) => {
-  try {
-    return await res.json();
-  } catch {
-    return fallback;
-  }
-};
+import API from "../api/api";
 
 const digitsOnly = (v) => String(v ?? "").replace(/\D/g, "");
 const norm = (s) => String(s ?? "").trim();
 
-/* ================= FETCH ================= */
+const apiErr = (e, fallback = "Request failed") =>
+  e?.response?.data?.message || e?.response?.data?.error || e?.message || fallback;
 
+/* ================= FETCH ================= */
 export const fetchCustomers = createAsyncThunk(
   "customers/fetchCustomers",
   async (_, { rejectWithValue }) => {
     try {
-      const res = await fetch(`${API_BASE}/all`);
-
-      if (!res.ok) {
-        const err = await safeJson(res, {});
-        return rejectWithValue(
-          err?.message || err?.error || `HTTP ${res.status}`
-        );
-      }
-
-      const data = await safeJson(res, []);
+      const { data } = await API.get("/api/customers/all");
       return Array.isArray(data) ? data : [];
     } catch (e) {
-      return rejectWithValue(e.message || "Server not reachable");
+      return rejectWithValue(apiErr(e, "Server not reachable"));
     }
   }
 );
 
 /* ================= UPDATE ================= */
-
 export const updateCustomer = createAsyncThunk(
   "customers/updateCustomer",
   async ({ id, customerName, customerAddress }, { rejectWithValue }) => {
@@ -51,35 +34,21 @@ export const updateCustomer = createAsyncThunk(
         customerAddress: norm(customerAddress)
       };
 
-      const res = await fetch(`${API_BASE}/${cid}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
-
-      if (!res.ok) {
-        const err = await safeJson(res, {});
-        return rejectWithValue(
-          err?.message || err?.error || `HTTP ${res.status}`
-        );
-      }
-
-      const data = await safeJson(res, {});
+      const { data } = await API.put(`/api/customers/${cid}`, payload);
 
       return {
         id: Number(cid),
         customerName: payload.customerName,
         customerAddress: payload.customerAddress,
-        ...data
+        ...(data && typeof data === "object" ? data : {})
       };
     } catch (e) {
-      return rejectWithValue(e.message || "Update failed");
+      return rejectWithValue(apiErr(e, "Update failed"));
     }
   }
 );
 
 /* ================= SAVE ALL ================= */
-
 export const saveAllCustomers = createAsyncThunk(
   "customers/saveAllCustomers",
   async (_, { getState, dispatch, rejectWithValue }) => {
@@ -104,13 +73,12 @@ export const saveAllCustomers = createAsyncThunk(
 
       return { saved: dirtyIds.length };
     } catch (e) {
-      return rejectWithValue(e.message || "Bulk save failed");
+      return rejectWithValue(e?.message || "Bulk save failed");
     }
   }
 );
 
 /* ================= SLICE ================= */
-
 const customersSlice = createSlice({
   name: "customers",
   initialState: {
@@ -157,19 +125,15 @@ const customersSlice = createSlice({
 
   extraReducers: (builder) => {
     builder
-      /* FETCH */
       .addCase(fetchCustomers.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
       .addCase(fetchCustomers.fulfilled, (state, action) => {
         state.loading = false;
-        state.rows = Array.isArray(action.payload)
-          ? action.payload
-          : [];
+        state.rows = Array.isArray(action.payload) ? action.payload : [];
 
         const existing = new Set(state.rows.map((r) => String(r.id)));
-
         Object.keys(state.editsById).forEach((k) => {
           if (!existing.has(k)) {
             delete state.editsById[k];
@@ -183,7 +147,6 @@ const customersSlice = createSlice({
         state.error = action.payload || "Failed to load customers";
       })
 
-      /* UPDATE */
       .addCase(updateCustomer.pending, (state) => {
         state.saving = true;
         state.error = null;
@@ -194,15 +157,9 @@ const customersSlice = createSlice({
         const updated = action.payload;
         const key = String(updated.id);
 
-        const idx = state.rows.findIndex(
-          (r) => String(r.id) === key
-        );
-
+        const idx = state.rows.findIndex((r) => String(r.id) === key);
         if (idx >= 0) {
-          state.rows[idx] = {
-            ...state.rows[idx],
-            ...updated
-          };
+          state.rows[idx] = { ...state.rows[idx], ...updated };
         }
 
         delete state.editsById[key];
@@ -213,7 +170,6 @@ const customersSlice = createSlice({
         state.error = action.payload || "Customer update failed";
       })
 
-      /* SAVE ALL */
       .addCase(saveAllCustomers.pending, (state) => {
         state.saving = true;
         state.error = null;

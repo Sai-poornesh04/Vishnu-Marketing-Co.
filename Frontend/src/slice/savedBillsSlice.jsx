@@ -1,8 +1,6 @@
+// src/slice/savedBillsSlice.jsx
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-
-const safeJson = async (res, fallback) => {
-  try { return await res.json(); } catch { return fallback; }
-};
+import API from "../api/api";
 
 const toMysqlDate = (v) => {
   const s = String(v || "").trim();
@@ -34,19 +32,18 @@ const toNum = (v) => {
 const calcTotalAmount = (items = []) =>
   items.reduce((sum, it) => sum + toNum(it.qty) * toNum(it.price), 0);
 
-const API = "https://vishnu-marketing-co.onrender.com/api/saved-bills";
+const apiErr = (e, fallback = "Request failed") =>
+  e?.response?.data?.message || e?.response?.data?.error || e?.message || fallback;
 
-/* ===================== THUNKS ===================== */
+/* ===================== THUNKS (AXIOS API) ===================== */
 export const fetchAllSavedBills = createAsyncThunk(
   "savedBills/fetchAll",
   async (_, { rejectWithValue }) => {
     try {
-      const res = await fetch(`${API}/all`);
-      const data = await safeJson(res, []);
-      if (!res.ok) return rejectWithValue(data?.error || `HTTP ${res.status}`);
+      const { data } = await API.get("/api/saved-bills/all");
       return Array.isArray(data) ? data : [];
-    } catch (err) {
-      return rejectWithValue(err.message);
+    } catch (e) {
+      return rejectWithValue(apiErr(e));
     }
   }
 );
@@ -55,18 +52,16 @@ export const searchSavedBillsFromDB = createAsyncThunk(
   "savedBills/search",
   async ({ billNo, customerId, fromDate, toDate }, { rejectWithValue }) => {
     try {
-      const params = new URLSearchParams();
-      if (billNo) params.set("billNo", String(billNo).trim());
-      if (customerId) params.set("customerId", digitsOnly(customerId));
-      if (fromDate) params.set("fromDate", toMysqlDate(fromDate));
-      if (toDate) params.set("toDate", toMysqlDate(toDate));
+      const params = {};
+      if (billNo) params.billNo = String(billNo).trim();
+      if (customerId) params.customerId = digitsOnly(customerId);
+      if (fromDate) params.fromDate = toMysqlDate(fromDate);
+      if (toDate) params.toDate = toMysqlDate(toDate);
 
-      const res = await fetch(`${API}/search?${params.toString()}`);
-      const data = await safeJson(res, []);
-      if (!res.ok) return rejectWithValue(data?.error || `HTTP ${res.status}`);
+      const { data } = await API.get("/api/saved-bills/search", { params });
       return Array.isArray(data) ? data : [];
-    } catch (err) {
-      return rejectWithValue(err.message);
+    } catch (e) {
+      return rejectWithValue(apiErr(e));
     }
   }
 );
@@ -75,18 +70,15 @@ export const deleteSavedBillFromDB = createAsyncThunk(
   "savedBills/delete",
   async (id, { dispatch, rejectWithValue }) => {
     try {
-      const res = await fetch(`${API}/${id}`, { method: "DELETE" });
-      const data = await safeJson(res, {});
-      if (!res.ok) return rejectWithValue(data?.error || `HTTP ${res.status}`);
+      await API.delete(`/api/saved-bills/${id}`);
       dispatch(fetchAllSavedBills());
       return id;
-    } catch (err) {
-      return rejectWithValue(err.message);
+    } catch (e) {
+      return rejectWithValue(apiErr(e));
     }
   }
 );
 
-// ✅ NEW: update existing saved bill (PUT /api/saved-bills/:id)
 export const updateSavedBillInDB = createAsyncThunk(
   "savedBills/update",
   async ({ id, billData }, { dispatch, rejectWithValue }) => {
@@ -110,23 +102,17 @@ export const updateSavedBillInDB = createAsyncThunk(
         return rejectWithValue("Invalid payload (billNo/billDate/customerId required)");
       }
 
-      const res = await fetch(`${API}/${safeId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
-
-      const data = await safeJson(res, {});
-      if (!res.ok) return rejectWithValue(data?.error || `HTTP ${res.status}`);
+      const { data } = await API.put(`/api/saved-bills/${safeId}`, payload);
 
       dispatch(fetchAllSavedBills());
       return { id: safeId, data };
-    } catch (err) {
-      return rejectWithValue(err.message);
+    } catch (e) {
+      return rejectWithValue(apiErr(e));
     }
   }
 );
 
+/* ===================== SLICE ===================== */
 const savedBillsSlice = createSlice({
   name: "savedBills",
   initialState: {
@@ -181,7 +167,6 @@ const savedBillsSlice = createSlice({
         state.error = action.payload;
       })
 
-      // ✅ update handlers
       .addCase(updateSavedBillInDB.pending, (state) => {
         state.loading = true;
         state.error = null;
