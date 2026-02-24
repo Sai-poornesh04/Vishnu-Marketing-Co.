@@ -21,164 +21,176 @@ const toMysqlDate = (v) => {
   return s;
 };
 
-const getAllSavedBills = (req, res) => {
-  const sql = `
-    CALL sp_bills(
-      'GET_ALL', NULL,
-      NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-      NULL, NULL, NULL, NULL, NULL
-    )
-  `;
-  db.query(sql, (err, result) => {
-    if (err) {
-      console.error("GET_ALL ERROR 👉", err);
-      return res.status(500).json({ error: err.sqlMessage || err.message });
-    }
-    const rows = result?.[0] || [];
-    res.json(rows.map((b) => ({ ...b, billTable: safeJson(b.billTable, []) })));
-  });
+/* ================= GET ALL ================= */
+
+const getAllSavedBills = async (req, res) => {
+  try {
+    const { rows } = await db.query(
+      `SELECT * FROM sp_bills(
+        'GET_ALL',
+        NULL,NULL,NULL,NULL,NULL,NULL,NULL,
+        NULL,NULL,NULL,NULL,NULL
+      )`
+    );
+
+    res.json(rows.map(b => ({
+      ...b,
+      billtable: safeJson(b.billtable, [])
+    })));
+
+  } catch (err) {
+    console.error("GET_ALL ERROR 👉", err);
+    res.status(500).json({ error: err.message });
+  }
 };
 
-const getSavedBillById = (req, res) => {
-  const id = parseInt(req.params.id, 10);
-  if (!id) return res.status(400).json({ message: "Invalid id" });
+/* ================= GET BY ID ================= */
 
-  const sql = `
-    CALL sp_bills(
-      'GET_BY_ID', ?,
-      NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-      NULL, NULL, NULL, NULL, NULL
-    )
-  `;
-  db.query(sql, [id], (err, result) => {
-    if (err) {
-      console.error("GET_BY_ID ERROR 👉", err);
-      return res.status(500).json({ error: err.sqlMessage || err.message });
-    }
-    const bill = result?.[0]?.[0];
-    if (!bill) return res.status(404).json({ message: "Bill not found" });
-    bill.billTable = safeJson(bill.billTable, []);
+const getSavedBillById = async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (!id) return res.status(400).json({ message: "Invalid id" });
+
+    const { rows } = await db.query(
+      `SELECT * FROM sp_bills(
+        'GET_BY_ID',
+        $1,
+        NULL,NULL,NULL,NULL,NULL,NULL,NULL,
+        NULL,NULL,NULL,NULL,NULL
+      )`,
+      [id]
+    );
+
+    if (!rows.length)
+      return res.status(404).json({ message: "Bill not found" });
+
+    const bill = rows[0];
+    bill.billtable = safeJson(bill.billtable, []);
+
     res.json(bill);
-  });
+
+  } catch (err) {
+    console.error("GET_BY_ID ERROR 👉", err);
+    res.status(500).json({ error: err.message });
+  }
 };
 
-const searchSavedBills = (req, res) => {
-  const billNo      = (req.query.billNo      ?? "").trim() || null;
-  const customerName = (req.query.customerName ?? "").trim() || null;
-  const customerId  = req.query.customerId ? parseInt(req.query.customerId, 10) : null;
-  const billDate    = req.query.billDate ? toMysqlDate(req.query.billDate) : null;
-  const fromDate    = req.query.fromDate ? toMysqlDate(req.query.fromDate) : null;
-  const toDate      = req.query.toDate   ? toMysqlDate(req.query.toDate)   : null;
+/* ================= SEARCH ================= */
 
-  const sql = `
-    CALL sp_bills(
-      'SEARCH', NULL,
-      NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-      ?, ?, ?, ?, ?
-    )
-  `;
-  db.query(
-    sql,
-    [billNo, customerName, customerId, billDate || fromDate, billDate || toDate],
-    (err, result) => {
-      if (err) {
-        console.error("SEARCH ERROR 👉", err);
-        return res.status(500).json({ error: err.sqlMessage || err.message });
-      }
-      const rows = result?.[0] || [];
-      res.json(rows.map((b) => ({ ...b, billTable: safeJson(b.billTable, []) })));
-    }
-  );
+const searchSavedBills = async (req, res) => {
+  try {
+    const billNo = req.query.billNo || null;
+    const customerName = req.query.customerName || null;
+    const customerId = req.query.customerId
+      ? parseInt(req.query.customerId, 10)
+      : null;
+
+    const fromDate = req.query.fromDate
+      ? toMysqlDate(req.query.fromDate)
+      : null;
+
+    const toDate = req.query.toDate
+      ? toMysqlDate(req.query.toDate)
+      : null;
+
+    const { rows } = await db.query(
+      `SELECT * FROM sp_bills(
+        'SEARCH',
+        NULL,
+        NULL,NULL,NULL,NULL,NULL,NULL,NULL,
+        $1,$2,$3,$4,$5
+      )`,
+      [billNo, customerName, customerId, fromDate, toDate]
+    );
+
+    res.json(rows.map(b => ({
+      ...b,
+      billtable: safeJson(b.billtable, [])
+    })));
+
+  } catch (err) {
+    console.error("SEARCH ERROR 👉", err);
+    res.status(500).json({ error: err.message });
+  }
 };
 
-const deleteSavedBill = (req, res) => {
-  const id = parseInt(req.params.id, 10);
-  if (!id) return res.status(400).json({ message: "Invalid id" });
+/* ================= DELETE ================= */
 
-  const sql = `
-    CALL sp_bills(
-      'DELETE', ?,
-      NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-      NULL, NULL, NULL, NULL, NULL
-    )
-  `;
-  db.query(sql, [id], (err) => {
-    if (err) {
-      console.error("DELETE ERROR 👉", err);
-      return res.status(500).json({ error: err.sqlMessage || err.message });
-    }
+const deleteSavedBill = async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (!id) return res.status(400).json({ message: "Invalid id" });
+
+    await db.query(
+      `SELECT * FROM sp_bills(
+        'DELETE',
+        $1,
+        NULL,NULL,NULL,NULL,NULL,NULL,NULL,
+        NULL,NULL,NULL,NULL,NULL
+      )`,
+      [id]
+    );
+
     res.json({ message: "Saved bill deleted successfully" });
-  });
+
+  } catch (err) {
+    console.error("DELETE ERROR 👉", err);
+    res.status(500).json({ error: err.message });
+  }
 };
 
-const getAllCustomers = (req, res) => {
-  const sql = `
-    SELECT id, customerName, customerAddress
-    FROM customers
-    WHERE flag = 1
-    ORDER BY id ASC
-  `;
-  db.query(sql, (err, result) => {
-    if (err) {
-      console.error("GET_ALL_CUSTOMERS ERROR 👉", err);
-      return res.status(500).json({ error: err.sqlMessage || err.message });
-    }
-    res.json(Array.isArray(result) ? result : []);
-  });
-};
+/* ================= UPDATE ================= */
 
+const updateSavedBill = async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (!id) return res.status(400).json({ message: "Invalid id" });
 
-// controllers/savedBillsController.js
-const updateSavedBill = (req, res) => {
-  const id = parseInt(req.params.id, 10);
-  if (!id) return res.status(400).json({ message: "Invalid id" });
-
-  const billNo = (req.body.billNo ?? "").trim() || null;
-  const billDate = req.body.billDate ? toMysqlDate(req.body.billDate) : null;
-  const customerId = req.body.customerId ? parseInt(req.body.customerId, 10) : null;
-  const customerName = (req.body.customerName ?? "").trim() || null;
-  const customerAddress = (req.body.customerAddress ?? "").trim() || null;
-
-  const items = Array.isArray(req.body.items) ? req.body.items : [];
-  const totalAmount = Number(req.body.totalAmount ?? 0);
-
-  const billTableJson = JSON.stringify(items);
-
-  const sql = `
-    CALL sp_bills(
-      'UPDATE', ?,
-      ?, ?, ?, ?, ?, ?, ?,
-      NULL, NULL, NULL, NULL, NULL
-    )
-  `;
-
-  db.query(
-    sql,
-    [
-      id,
+    const {
       billNo,
       billDate,
       customerId,
       customerName,
       customerAddress,
       totalAmount,
-      billTableJson
-    ],
-    (err) => {
-      if (err) {
-        console.error("UPDATE ERROR 👉", err);
-        return res.status(500).json({ error: err.sqlMessage || err.message });
-      }
-      res.json({ message: "Saved bill updated successfully" });
-    }
-  );
+      items
+    } = req.body;
+
+    const billTableJson = JSON.stringify(items || []);
+
+    await db.query(
+      `SELECT * FROM sp_bills(
+        'UPDATE',
+        $1,
+        $2,$3,$4,$5,$6,$7,$8,
+        NULL,NULL,NULL,NULL,NULL
+      )`,
+      [
+        id,
+        billNo,
+        toMysqlDate(billDate),
+        customerId,
+        customerName,
+        customerAddress,
+        totalAmount,
+        billTableJson
+      ]
+    );
+
+    res.json({ message: "Saved bill updated successfully" });
+
+  } catch (err) {
+    console.error("UPDATE ERROR 👉", err);
+    res.status(500).json({ error: err.message });
+  }
 };
+
+/* ================= EXPORT ================= */
 
 module.exports = {
   getAllSavedBills,
   getSavedBillById,
   searchSavedBills,
   deleteSavedBill,
-  getAllCustomers,
-  updateSavedBill,
+  updateSavedBill
 };
