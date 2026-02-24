@@ -19,7 +19,8 @@ const mapCustomer = (c) => ({
 const getCustomerById = async (req, res) => {
   try {
     const id = toIntOrNull(req.params.id);
-    if (!id) return res.status(400).json({ message: "Invalid customer id" });
+    if (!id)
+      return res.status(400).json({ message: "Invalid customer id" });
 
     const result = await db.query(
       `SELECT * FROM sp_getCustomerById($1)`,
@@ -41,8 +42,13 @@ const getCustomerById = async (req, res) => {
 const getAllCustomers = async (req, res) => {
   try {
     const result = await db.query(
-      `SELECT * FROM sp_customers($1,NULL,NULL)`,
-      ["GET_ALL"]
+      `SELECT * FROM sp_customers($1,$2,$3,$4)`,
+      [
+        "GET_ALL",
+        null,
+        null,
+        null
+      ]
     );
 
     res.json(result.rows.map(mapCustomer));
@@ -64,8 +70,13 @@ const updateCustomer = async (req, res) => {
     const customerAddress = String(req.body.customerAddress ?? "").trim();
 
     const result = await db.query(
-      `SELECT * FROM sp_customers($1,$2,$3)`,
-      ["UPDATE", idNum, customerName, customerAddress]
+      `SELECT * FROM sp_customers($1,$2,$3,$4)`,
+      [
+        "UPDATE",
+        idNum,
+        customerName,
+        customerAddress
+      ]
     );
 
     if (!result.rows.length)

@@ -51,7 +51,7 @@ const calcTotalAmount = (items) =>
     return sum + toNumOrZero(it.qty) * toNumOrZero(it.price);
   }, 0);
 
-// 🔥 Normalize DB → API format
+// Normalize DB → API format
 const mapBill = (b) => ({
   id: b.id,
   billNo: b.billno,
@@ -61,10 +61,10 @@ const mapBill = (b) => ({
   customerAddress: b.customeraddress,
   totalAmount: b.totalamount,
   billTable: safeJson(b.billtable, []),
-  createdAt: b.createdat
+  createdAt: b.createdat,
 });
 
-// -------------------- Bills --------------------
+// -------------------- SAVE --------------------
 
 const saveBill = async (req, res) => {
   try {
@@ -86,27 +86,27 @@ const saveBill = async (req, res) => {
         : calcTotalAmount(itemsClean);
 
     const result = await db.query(
-  `SELECT * FROM sp_bills(
-    $1,$2,$3,$4,$5,$6,$7,$8,$9,
-    $10,$11,$12,$13,$14
-  )`,
-  [
-    "INSERT",                    // $1
-    null,                        // $2 (id)
-    billNo,                      // $3
-    toSqlDate(billDate ?? date), // $4
-    Number(customerId),          // $5
-    customerName,                // $6
-    customerAddress,             // $7
-    total,                       // $8
-    JSON.stringify(itemsClean),  // $9 (jsonb)
-    null,                        // $10 searchBillNo
-    null,                        // $11 searchCustomerName
-    null,                        // $12 searchCustomerId
-    null,                        // $13 searchFromDate
-    null                         // $14 searchToDate
-  ]
-);
+      `SELECT * FROM sp_bills(
+        $1,$2,$3,$4,$5,$6,$7,$8,$9,
+        $10,$11,$12,$13,$14
+      )`,
+      [
+        "INSERT",
+        null,
+        billNo,
+        toSqlDate(billDate ?? date),
+        Number(customerId),
+        customerName,
+        customerAddress,
+        total,
+        JSON.stringify(itemsClean),
+        null,
+        null,
+        null,
+        null,
+        null,
+      ]
+    );
 
     res.json({
       message: "Bill saved successfully",
@@ -118,14 +118,16 @@ const saveBill = async (req, res) => {
   }
 };
 
+// -------------------- UPDATE --------------------
+
 const updateBill = async (req, res) => {
   try {
     const id = toIntOrNull(req.params.id);
 
     await db.query(
       `SELECT * FROM sp_bills(
-        $1,$2,$3,$4,$5,$6,$7,$8,
-        NULL,NULL,NULL,NULL,NULL
+        $1,$2,$3,$4,$5,$6,$7,$8,$9,
+        $10,$11,$12,$13,$14
       )`,
       [
         "UPDATE",
@@ -137,6 +139,11 @@ const updateBill = async (req, res) => {
         req.body.customerAddress,
         toNumOrZero(req.body.totalAmount),
         JSON.stringify(req.body.items || []),
+        null,
+        null,
+        null,
+        null,
+        null,
       ]
     );
 
@@ -147,14 +154,33 @@ const updateBill = async (req, res) => {
   }
 };
 
+// -------------------- GET BY ID --------------------
+
 const getBillById = async (req, res) => {
   try {
+    const id = toIntOrNull(req.params.id);
+
     const result = await db.query(
       `SELECT * FROM sp_bills(
-        $1,$2,NULL,NULL,NULL,NULL,NULL,NULL,NULL,
-        NULL,NULL,NULL,NULL,NULL
+        $1,$2,$3,$4,$5,$6,$7,$8,$9,
+        $10,$11,$12,$13,$14
       )`,
-      ["GET_BY_ID", toIntOrNull(req.params.id)]
+      [
+        "GET_BY_ID",
+        id,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+      ]
     );
 
     if (!result.rows.length)
@@ -167,14 +193,31 @@ const getBillById = async (req, res) => {
   }
 };
 
+// -------------------- GET ALL --------------------
+
 const getAllBills = async (req, res) => {
   try {
     const result = await db.query(
       `SELECT * FROM sp_bills(
-        $1,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,
-        NULL,NULL,NULL,NULL,NULL
+        $1,$2,$3,$4,$5,$6,$7,$8,$9,
+        $10,$11,$12,$13,$14
       )`,
-      ["GET_ALL"]
+      [
+        "GET_ALL",
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+      ]
     );
 
     res.json(result.rows.map(mapBill));
@@ -184,20 +227,30 @@ const getAllBills = async (req, res) => {
   }
 };
 
+// -------------------- SEARCH --------------------
+
 const searchBills = async (req, res) => {
   try {
     const result = await db.query(
       `SELECT * FROM sp_bills(
-        $1,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,
-        $2,$3,$4,$5,$6
+        $1,$2,$3,$4,$5,$6,$7,$8,$9,
+        $10,$11,$12,$13,$14
       )`,
       [
         "SEARCH",
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
         req.query.billNo || null,
         req.query.customerName || null,
         req.query.customerId ? Number(req.query.customerId) : null,
-        req.query.fromDate || null,
-        req.query.toDate || null,
+        req.query.fromDate ? toSqlDate(req.query.fromDate) : null,
+        req.query.toDate ? toSqlDate(req.query.toDate) : null,
       ]
     );
 
@@ -208,14 +261,33 @@ const searchBills = async (req, res) => {
   }
 };
 
+// -------------------- DELETE --------------------
+
 const deleteBill = async (req, res) => {
   try {
+    const id = toIntOrNull(req.params.id);
+
     await db.query(
       `SELECT * FROM sp_bills(
-        $1,$2,NULL,NULL,NULL,NULL,NULL,NULL,NULL,
-        NULL,NULL,NULL,NULL,NULL
+        $1,$2,$3,$4,$5,$6,$7,$8,$9,
+        $10,$11,$12,$13,$14
       )`,
-      ["DELETE", toIntOrNull(req.params.id)]
+      [
+        "DELETE",
+        id,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+      ]
     );
 
     res.json({ message: "Bill deleted successfully" });
@@ -224,6 +296,8 @@ const deleteBill = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+// -------------------- CUSTOMER BY ID --------------------
 
 const getCustomerById = async (req, res) => {
   try {
@@ -239,7 +313,7 @@ const getCustomerById = async (req, res) => {
     res.json({
       id: c.id,
       customerName: c.customername,
-      customerAddress: c.customeraddress
+      customerAddress: c.customeraddress,
     });
   } catch (err) {
     console.error("CUSTOMER FETCH ERROR 👉", err);
@@ -254,5 +328,5 @@ module.exports = {
   getAllBills,
   searchBills,
   deleteBill,
-  getCustomerById
+  getCustomerById,
 };
