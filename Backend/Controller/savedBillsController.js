@@ -30,7 +30,19 @@ const toIntOrNull = (v) => {
   return Number.isFinite(n) && n > 0 ? Math.trunc(n) : null;
 };
 
-// -------------------- GET ALL SAVED BILLS --------------------
+const mapBill = (b) => ({
+  id: b.id,
+  billNo: b.billno,
+  billDate: b.billdate,
+  customerId: b.customerid,
+  customerName: b.customername,
+  customerAddress: b.customeraddress,
+  totalAmount: b.totalamount,
+  billTable: safeJson(b.billtable, []),
+  createdAt: b.createdat
+});
+
+// -------------------- GET ALL --------------------
 
 const getAllSavedBills = async (req, res) => {
   try {
@@ -42,12 +54,7 @@ const getAllSavedBills = async (req, res) => {
       ["GET_ALL"]
     );
 
-    res.json(
-      result.rows.map((b) => ({
-        ...b,
-        billtable: safeJson(b.billtable, []),
-      }))
-    );
+    res.json(result.rows.map(mapBill));
   } catch (err) {
     console.error("GET_ALL ERROR 👉", err);
     res.status(500).json({ error: err.message });
@@ -72,10 +79,7 @@ const getSavedBillById = async (req, res) => {
     if (!result.rows.length)
       return res.status(404).json({ message: "Bill not found" });
 
-    const bill = result.rows[0];
-    bill.billtable = safeJson(bill.billtable, []);
-
-    res.json(bill);
+    res.json(mapBill(result.rows[0]));
   } catch (err) {
     console.error("GET_BY_ID ERROR 👉", err);
     res.status(500).json({ error: err.message });
@@ -101,19 +105,14 @@ const searchSavedBills = async (req, res) => {
       ]
     );
 
-    res.json(
-      result.rows.map((b) => ({
-        ...b,
-        billtable: safeJson(b.billtable, []),
-      }))
-    );
+    res.json(result.rows.map(mapBill));
   } catch (err) {
     console.error("SEARCH ERROR 👉", err);
     res.status(500).json({ error: err.message });
   }
 };
 
-// -------------------- DELETE (Soft Delete) --------------------
+// -------------------- DELETE --------------------
 
 const deleteSavedBill = async (req, res) => {
   try {
@@ -144,7 +143,14 @@ const getAllCustomers = async (req, res) => {
       ["GET_ALL"]
     );
 
-    res.json(result.rows);
+    res.json(
+      result.rows.map(c => ({
+        id: c.id,
+        customerName: c.customername,
+        customerAddress: c.customeraddress,
+        createdAt: c.createdat
+      }))
+    );
   } catch (err) {
     console.error("GET_ALL_CUSTOMERS ERROR 👉", err);
     res.status(500).json({ error: err.message });

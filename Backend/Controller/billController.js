@@ -51,6 +51,19 @@ const calcTotalAmount = (items) =>
     return sum + toNumOrZero(it.qty) * toNumOrZero(it.price);
   }, 0);
 
+// 🔥 Normalize DB → API format
+const mapBill = (b) => ({
+  id: b.id,
+  billNo: b.billno,
+  billDate: b.billdate,
+  customerId: b.customerid,
+  customerName: b.customername,
+  customerAddress: b.customeraddress,
+  totalAmount: b.totalamount,
+  billTable: safeJson(b.billtable, []),
+  createdAt: b.createdat
+});
+
 // -------------------- Bills --------------------
 
 const saveBill = async (req, res) => {
@@ -104,7 +117,7 @@ const updateBill = async (req, res) => {
   try {
     const id = toIntOrNull(req.params.id);
 
-    const result = await db.query(
+    await db.query(
       `SELECT * FROM sp_bills(
         $1,$2,$3,$4,$5,$6,$7,$8,
         NULL,NULL,NULL,NULL,NULL
@@ -142,10 +155,7 @@ const getBillById = async (req, res) => {
     if (!result.rows.length)
       return res.status(404).json({ message: "Bill not found" });
 
-    const bill = result.rows[0];
-    bill.billtable = safeJson(bill.billtable, []);
-
-    res.json(bill);
+    res.json(mapBill(result.rows[0]));
   } catch (err) {
     console.error("GET_BY_ID ERROR 👉", err);
     res.status(500).json({ error: err.message });
@@ -162,12 +172,7 @@ const getAllBills = async (req, res) => {
       ["GET_ALL"]
     );
 
-    res.json(
-      result.rows.map((b) => ({
-        ...b,
-        billtable: safeJson(b.billtable, []),
-      }))
-    );
+    res.json(result.rows.map(mapBill));
   } catch (err) {
     console.error("GET_ALL ERROR 👉", err);
     res.status(500).json({ error: err.message });
@@ -191,12 +196,7 @@ const searchBills = async (req, res) => {
       ]
     );
 
-    res.json(
-      result.rows.map((b) => ({
-        ...b,
-        billtable: safeJson(b.billtable, []),
-      }))
-    );
+    res.json(result.rows.map(mapBill));
   } catch (err) {
     console.error("SEARCH ERROR 👉", err);
     res.status(500).json({ error: err.message });
@@ -229,7 +229,13 @@ const getCustomerById = async (req, res) => {
 
     if (!result.rows.length) return res.status(404).json(null);
 
-    res.json(result.rows[0]);
+    const c = result.rows[0];
+
+    res.json({
+      id: c.id,
+      customerName: c.customername,
+      customerAddress: c.customeraddress
+    });
   } catch (err) {
     console.error("CUSTOMER FETCH ERROR 👉", err);
     res.status(500).json({ error: err.message });
