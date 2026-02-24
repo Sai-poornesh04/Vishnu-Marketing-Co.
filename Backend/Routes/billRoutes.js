@@ -1,11 +1,6 @@
 const express = require("express");
 const router = express.Router();
 const controller = require("../Controller/billController");
-const savedBillsController = require("../Controller/savedBillsController");
-
-/* ===== CUSTOMER ROUTES (ORDER IMPORTANT) ===== */
-router.get("/customers/all", savedBillsController.getAllCustomers);
-router.get("/customers/:id", controller.getCustomerById);
 
 /* ===== BILL ROUTES ===== */
 router.post("/save", controller.saveBill);
