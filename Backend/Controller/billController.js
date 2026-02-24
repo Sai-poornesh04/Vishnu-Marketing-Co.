@@ -236,20 +236,6 @@ const getCustomerById = async (req, res) => {
   }
 };
 
-const getAllCustomers = async (req, res) => {
-  try {
-    const result = await db.query(
-      `SELECT * FROM sp_customers($1,NULL,NULL)`,
-      ["GET_ALL"]
-    );
-
-    res.json(result.rows);
-  } catch (err) {
-    console.error("CUSTOMER LIST ERROR 👉", err);
-    res.status(500).json({ error: err.message });
-  }
-};
-
 module.exports = {
   saveBill,
   updateBill,
@@ -257,6 +243,5 @@ module.exports = {
   getAllBills,
   searchBills,
   deleteBill,
-  getAllCustomers,
   getCustomerById
 };
