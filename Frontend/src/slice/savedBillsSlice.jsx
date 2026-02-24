@@ -34,7 +34,7 @@ const toNum = (v) => {
 const calcTotalAmount = (items = []) =>
   items.reduce((sum, it) => sum + toNum(it.qty) * toNum(it.price), 0);
 
-const API = "https://vishnu-marketing-co.onrender.com/api/saved-bills";
+const API = "https://vishnu-marketing-co.onrender.com/api/";
 
 /* ===================== THUNKS ===================== */
 export const fetchAllSavedBills = createAsyncThunk(
