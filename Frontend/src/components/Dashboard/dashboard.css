@@ -38,27 +38,39 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px 24px;
+  padding: 12px 30px; /* Slightly more vertical padding */
+  min-height: 110px;  /* Ensure the header is tall enough */
+  box-sizing: border-box;
 }
 
 .dash-brand {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 0px;
   font-weight: 800;
   font-size: 18px;
   color: #12430a;
 }
 
-.brand-logo {
-  width: 40px;
-  height: 40px;
-  background: linear-gradient(135deg, #2f6f1d 0%, #4caf50 100%);
-  color: white;
-  display: grid;
-  place-items: center;
-  border-radius: 12px;
-  font-size: 16px;
+.brand-logo-img {
+  height: 70px;         /* Much bigger than before */
+  width: auto;          /* Maintains aspect ratio perfectly */
+  object-fit: contain;  /* Ensures no stretching */
+  /* Adds a premium soft shadow to pop the 3D effect */
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.15));
+  /* Ensures crisp rendering on high-res screens */
+  image-rendering: -webkit-optimize-contrast; 
+  will-change: transform; /* Smoother rendering */
+}
+
+.dash-brand span {
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: 0px;
+  width: auto;
+  /* Optional: Match the green brand color if you haven't already */
+  color: #2f6f1d; 
+  text-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 .dash-logout {

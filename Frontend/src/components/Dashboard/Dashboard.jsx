@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchSavedBills, resetBill, clearEditId } from "../../slice/billSlice";
 import "./dashboard.css";
-
+import logo from "../../assets/VM-logo.png";
 function Dashboard() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -48,7 +48,7 @@ function Dashboard() {
 
       <div className="dash-nav">
         <div className="dash-brand">
-          <div className="brand-logo">VM</div>
+          <img src={logo} alt="VM Logo" className="brand-logo-img" />
           <span>Vishnu Marketing Co.</span>
         </div>
         <button className="dash-logout" onClick={onLogout}>Logout</button>
