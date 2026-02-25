@@ -3,6 +3,7 @@ import { useDispatch } from "react-redux";
 import { login } from "../../slice/authSlice";
 import { useNavigate } from "react-router-dom";
 import "./login.css";
+import logo from "../../assets/VM-logo.png";
 
 export default function Login() {
   const [username, setUsername] = useState("");
@@ -57,7 +58,8 @@ export default function Login() {
 
       <div className="login-shell">
         <div className="login-brand">
-          <div className="brand-badge">VM</div>
+          <img src={logo} alt="VM Logo" className="brand-logo-img" />
+
           <div className="brand-text">
             <div className="brand-title">Welcome to Vishnu Marketing & co</div>
             <div className="brand-sub">Secure Admin Access</div>
