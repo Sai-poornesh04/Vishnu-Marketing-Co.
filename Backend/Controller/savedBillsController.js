@@ -156,7 +156,6 @@ const getAllCustomers = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
-
 // -------------------- UPDATE SAVED BILL --------------------
 
 const updateSavedBill = async (req, res) => {
@@ -164,27 +163,46 @@ const updateSavedBill = async (req, res) => {
     const id = toIntOrNull(req.params.id);
     if (!id) return res.status(400).json({ message: "Invalid id" });
 
+    const custId = toIntOrNull(req.body.customerId);
+    const sqlDate = toSqlDate(req.body.billDate);
+    const itemsJson = JSON.stringify(req.body.items || []);
+    const totalAmt = Number(req.body.totalAmount ?? 0);
+
+    // Logging the data so you can see exactly what is being sent to DB
+    console.log(`Attempting to UPDATE Bill ID: ${id}`);
+    console.log(`Payload: No:${req.body.billNo}, Date:${sqlDate}, Cust:${custId}, Amt:${totalAmt}`);
+
+    // We explicitly bind all 14 parameters. 
+    // We also cast $9 to ::jsonb just in case your DB strictly requires it.
     await db.query(
       `SELECT * FROM sp_bills(
-        $1,$2,$3,$4,$5,$6,$7,$8,
-        $9,$10,$11,$12,$1
+        $1, $2, $3, $4, $5, $6, $7, $8, $9::jsonb, 
+        $10, $11, $12, $13, $14
       )`,
       [
-        "UPDATE",
-        id,
-        req.body.billNo,
-        toSqlDate(req.body.billDate),
-        req.body.customerId,
-        req.body.customerName,
-        req.body.customerAddress,
-        Number(req.body.totalAmount ?? 0),
-        JSON.stringify(req.body.items || []),
+        "UPDATE",                  // $1
+        id,                        // $2
+        req.body.billNo,           // $3
+        sqlDate,                   // $4
+        custId,                    // $5
+        req.body.customerName,     // $6
+        req.body.customerAddress,  // $7
+        totalAmt,                  // $8
+        itemsJson,                 // $9
+        null,                      // $10 (search bill no)
+        null,                      // $11 (search cust name)
+        null,                      // $12 (search cust id)
+        null,                      // $13 (search from date)
+        null                       // $14 (search to date)
       ]
     );
 
+    console.log(`✅ Successfully updated Bill ID: ${id}`);
     res.json({ message: "Saved bill updated successfully" });
+
   } catch (err) {
-    console.error("UPDATE ERROR 👉", err);
+    // This will print the EXACT database error in your VS Code terminal
+    console.error("❌ UPDATE ERROR 👉", err.message);
     res.status(500).json({ error: err.message });
   }
 };
