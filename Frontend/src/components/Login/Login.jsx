@@ -39,7 +39,7 @@ export default function Login() {
 
       localStorage.setItem("token", data.token);
       dispatch(login({ name: data?.user?.username || username.trim() }));
-      navigate("/bill");
+      navigate("/dashboard");
     } catch {
       setError("Server error");
     } finally {
@@ -60,7 +60,7 @@ export default function Login() {
           <div className="brand-badge">VM</div>
           <div className="brand-text">
             <div className="brand-title">Welcome to Vishnu Marketing & co</div>
-            
+            <div className="brand-sub">Secure Admin Access</div>
           </div>
         </div>
 
@@ -75,7 +75,7 @@ export default function Login() {
             <input
               type="text"
               autoComplete="username"
-              placeholder="admin"
+              placeholder="Enter username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleLogin()}
@@ -88,7 +88,7 @@ export default function Login() {
               <input
                 type={showPass ? "text" : "password"}
                 autoComplete="current-password"
-                placeholder="admin"
+                placeholder="Enter password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleLogin()}
@@ -109,14 +109,6 @@ export default function Login() {
           <button className="login-btn" onClick={handleLogin} disabled={loading}>
             {loading ? "Signing in..." : "Login"}
           </button>
-
-          
-        </div>
-
-        <div className="login-foot">
-          <span>VISHNU MARKETING CO.</span>
-          <span>•</span>
-          <span>Secure Admin Access</span>
         </div>
       </div>
     </div>

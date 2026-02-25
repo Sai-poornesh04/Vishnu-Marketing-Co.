@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import Dashboard from "./components/Dashboard/Dashboard"; // <-- Make sure the path matches your structure
 import Bill from "./components/Bill/Bill";
 import SavedBills from "./components/Savedbills/Savedbills";
 import Customers from "./components/Customers/Customers";
@@ -12,7 +13,8 @@ function PrivateRoute({ children }) {
 
 function PublicRoute({ children }) {
   const token = localStorage.getItem("token");
-  return token ? <Navigate to="/bill" replace /> : children;
+  // Redirect logged-in users to the dashboard instead of the blank bill
+  return token ? <Navigate to="/dashboard" replace /> : children;
 }
 
 function App() {
@@ -25,6 +27,16 @@ function App() {
             <PublicRoute>
               <Login />
             </PublicRoute>
+          }
+        />
+
+        {/* --- NEW DASHBOARD ROUTE --- */}
+        <Route
+          path="/dashboard"
+          element={
+            <PrivateRoute>
+              <Dashboard />
+            </PrivateRoute>
           }
         />
 

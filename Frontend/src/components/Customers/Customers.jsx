@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import "../Bill/bill.css"; // 🔥 Reusing our premium layout and navbar styles!
 import "./customer.css";
 
 const API = "https://vishnu-marketing-co.onrender.com/api/customers";
@@ -15,6 +16,16 @@ export default function Customers() {
   // filters
   const [q, setQ] = useState("");
   const [onlyChanged, setOnlyChanged] = useState(false);
+
+  // inline toast
+  const [toast, setToast] = useState({ show: false, type: "success", text: "" });
+  const showToast = (type, text) => {
+    setToast({ show: true, type, text });
+    window.clearTimeout(showToast._t);
+    showToast._t = window.setTimeout(() => {
+      setToast((t) => ({ ...t, show: false }));
+    }, 2200);
+  };
 
   const load = async () => {
     setLoading(true);
@@ -44,6 +55,7 @@ export default function Customers() {
 
   useEffect(() => {
     load();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const isDirty = (r) =>
@@ -59,7 +71,7 @@ export default function Customers() {
     const addr = String(row.customerAddress ?? "").trim();
 
     if (!name) {
-      setError("Customer name required");
+      showToast("error", "Customer name required");
       return;
     }
 
@@ -82,8 +94,9 @@ export default function Customers() {
             : r
         )
       );
+      showToast("success", "Saved!");
     } catch (e) {
-      setError(String(e.message || "Update failed"));
+      showToast("error", String(e.message || "Update failed"));
     } finally {
       setSavingId(null);
     }
@@ -91,10 +104,14 @@ export default function Customers() {
 
   const saveAll = async () => {
     const dirty = rows.filter(isDirty);
+    if (dirty.length === 0) return;
+    
+    let successCount = 0;
     for (const r of dirty) {
-      // eslint-disable-next-line no-await-in-loop
       await save(r);
+      successCount++;
     }
+    showToast("success", `Saved ${successCount} customers`);
   };
 
   const filtered = useMemo(() => {
@@ -117,8 +134,8 @@ export default function Customers() {
 
   const dirtyCount = useMemo(() => rows.filter(isDirty).length, [rows]);
 
-  const onBackToBill = () => {
-    navigate("/bill", { replace: true, state: { goHome: true } });
+  const onBackToDashboard = () => {
+    navigate("/dashboard", { replace: true });
   };
 
   const onLogout = () => {
@@ -127,59 +144,67 @@ export default function Customers() {
   };
 
   return (
-    <div className="customers-page">
-      <div className="customers-card">
-        <div className="customers-head">
-          <h2 className="customers-title">Customers</h2>
+    <div className="bill-app-container">
+      {/* --- FLOATING ACTION BAR --- */}
+      <div className="bill-action-bar">
+        <button className="action-btn outline" onClick={onBackToDashboard}>
+          ← Back
+        </button>
+        
+        {/* Save All is now front and center! */}
+        <button 
+          className={`action-btn ${dirtyCount > 0 ? "primary" : "outline"}`} 
+          onClick={saveAll} 
+          disabled={dirtyCount === 0 || savingId != null}
+        >
+          {savingId ? "Saving..." : `💾 Save All (${dirtyCount})`}
+        </button>
 
-          <div className="customers-tools">
-            <button
-              className="customers-btn back-to-bill"
-              onClick={onBackToBill}
-              disabled={loading || savingId != null}
-              title="Back to Bill"
-            >
-              ← Back to Bill
-            </button>
-            <button className="customers-btn back-to-bill" onClick={onLogout}>
-              Logout
-            </button>
+        <button className="action-btn danger-outline" onClick={onLogout}>
+          Logout
+        </button>
+      </div>
 
+      {/* --- MAIN CONTENT --- */}
+      <div className="customers-content">
+        <div className="page-header">
+          <h2>Customer Database</h2>
+          <p>Manage addresses and details for quick billing</p>
+        </div>
+
+        {/* Filters Bar */}
+        <div className="customers-filters glass-panel staggered-1">
+          <div className="search-wrapper">
+            <span className="search-icon">🔍</span>
             <input
-              className="customers-search"
+              className="customers-search-input"
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder="Search by ID / name / address"
+              placeholder="Search ID, name, or address..."
             />
+          </div>
 
-            <label className="customers-check">
+          <div className="filter-toggles">
+            <label className={`toggle-pill ${onlyChanged ? 'active' : ''}`}>
               <input
                 type="checkbox"
                 checked={onlyChanged}
                 onChange={(e) => setOnlyChanged(e.target.checked)}
+                hidden
               />
-              Changed only
+              {onlyChanged ? "Showing Changed" : "Show Changed"}
             </label>
-
-            <button className="customers-btn" onClick={load} disabled={loading || savingId != null}>
-              Refresh
-            </button>
-
-            <button
-              className="customers-btn primary"
-              onClick={saveAll}
-              disabled={dirtyCount === 0 || savingId != null}
-              title={dirtyCount ? `Save ${dirtyCount} changed` : "No changes"}
-            >
-              Save All ({dirtyCount})
+            
+            <button className="refresh-btn" onClick={load} disabled={loading || savingId != null}>
+              🔄 Refresh
             </button>
           </div>
         </div>
 
-        {error ? <div className="customers-error">{error}</div> : null}
-        {loading ? <div className="customers-info">Loading...</div> : null}
+        {error && <div className="customers-error staggered-2">{error}</div>}
 
-        <div className="customers-table-wrap">
+        {/* Glass Table Wrapper */}
+        <div className="customers-table-wrap glass-panel hover-3d staggered-3">
           <table className="customers-table">
             <thead>
               <tr>
@@ -189,61 +214,72 @@ export default function Customers() {
                 <th className="col-action">Action</th>
               </tr>
             </thead>
-
             <tbody>
-              {filtered.map((r) => {
+              {filtered.map((r, index) => {
                 const dirty = isDirty(r);
                 return (
-                  <tr key={r.id} className={dirty ? "row-dirty" : ""}>
-                    <td className="col-id">{r.id}</td>
-
+                  <tr key={r.id} className={dirty ? "row-dirty" : ""} style={{ animationDelay: `${index * 0.05}s` }}>
+                    <td className="col-id"><span className="id-badge">#{r.id}</span></td>
                     <td>
                       <input
-                        className="customers-input"
+                        className="customers-cell-input"
                         value={r.customerName}
                         onChange={(e) => onChange(r.id, "customerName", e.target.value)}
                         placeholder="Customer name"
                       />
                     </td>
-
                     <td>
                       <input
-                        className="customers-input"
+                        className="customers-cell-input"
                         value={r.customerAddress}
                         onChange={(e) => onChange(r.id, "customerAddress", e.target.value)}
                         placeholder="Customer address"
                       />
                     </td>
-
                     <td className="col-action">
                       <button
-                        className="customers-btn"
+                        className={`cell-save-btn ${dirty ? "active" : ""}`}
                         onClick={() => save(r)}
                         disabled={!dirty || savingId === r.id}
                       >
-                        {savingId === r.id ? "Saving..." : "Save"}
+                        {savingId === r.id ? "..." : "Save"}
                       </button>
                     </td>
                   </tr>
                 );
               })}
 
-              {!loading && filtered.length === 0 ? (
+              {!loading && filtered.length === 0 && (
                 <tr>
                   <td colSpan={4} className="customers-empty">
-                    No customers
+                    <div className="empty-icon">📂</div>
+                    No customers found
                   </td>
                 </tr>
-              ) : null}
+              )}
             </tbody>
           </table>
+          {loading && <div className="customers-loading-overlay">Loading...</div>}
         </div>
 
-        <div className="customers-foot">
-          <div>Total: {rows.length}</div>
-          <div>Showing: {filtered.length}</div>
+        <div className="customers-foot staggered-4">
+          <span>Total Database: <strong>{rows.length}</strong></span>
+          <span>Currently Showing: <strong>{filtered.length}</strong></span>
         </div>
       </div>
+
+      {/* Toast */}
+      {toast.show && (
+        <div className="toast-notification" role="status" aria-live="polite">
+          <div className="toast-content">
+            <div className={`toast-icon ${toast.type}`}>
+              {toast.type === "success" ? "✓" : "!"}
+            </div>
+            <div className="toast-text">{toast.text}</div>
+            <button onClick={() => setToast((t) => ({ ...t, show: false }))} className="toast-close">×</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

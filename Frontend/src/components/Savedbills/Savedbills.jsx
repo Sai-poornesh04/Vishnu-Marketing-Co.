@@ -1,9 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchSavedBills, clearEditId } from "../../slice/billSlice";
+import { 
+  fetchSavedBills, clearEditId, openSearch, closeSearch, 
+  searchBillsFromDB, setSearchBillNo, setSearchCustomerId, 
+  setSearchFromDate, setSearchToDate 
+} from "../../slice/billSlice";
 import { deleteSavedBillFromDB, fetchAllSavedBills } from "../../slice/savedBillsSlice";
-import "../Bill/bill.css";
+import "../Bill/bill.css"; 
 
 const ymdToDmy = (v) => {
   const s = String(v || "").slice(0, 10);
@@ -14,307 +18,232 @@ const ymdToDmy = (v) => {
   return s;
 };
 
+const ymd = (d) => new Date(d).toISOString().slice(0, 10);
+
 function SavedBills() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { savedBills, loading, error } = useSelector((state) => state.bill);
+  
+  const { 
+    savedBills, loading, error, showSearchModal, searchBillNo, 
+    searchCustomerId, searchFromDate, searchToDate, searchResults 
+  } = useSelector((state) => state.bill);
 
   const [confirmId, setConfirmId] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
+  const [customers, setCustomers] = useState([]);
+  const [searchMonth, setSearchMonth] = useState("");
 
-  // ✅ inline toast (no new files)
   const [toast, setToast] = useState({ show: false, type: "success", text: "" });
   const showToast = (type, text) => {
     setToast({ show: true, type, text });
     window.clearTimeout(showToast._t);
-    showToast._t = window.setTimeout(() => {
-      setToast((t) => ({ ...t, show: false }));
-    }, 2200);
+    showToast._t = window.setTimeout(() => { setToast((t) => ({ ...t, show: false })); }, 2200);
   };
 
   useEffect(() => {
     dispatch(fetchSavedBills());
+    // Fetch customers so the search modal can show customer names based on ID
+    fetch("https://vishnu-marketing-co.onrender.com/api/bills/customers/all")
+      .then((r) => r.json())
+      .then((d) => setCustomers(Array.isArray(d) ? d : []))
+      .catch(() => setCustomers([]));
   }, [dispatch]);
 
   const onEdit = (bill) => {
+    dispatch(closeSearch()); // Close modal if open
     navigate("/bill", { state: { editBill: bill } });
   };
 
-  // ✅ Back to Bill should NOT increment billNo
-  // It should just leave edit mode and go home
-  const onBackToBill = () => {
+  const onBackToDashboard = () => {
     dispatch(clearEditId());
-    navigate("/bill", { replace: true, state: { goHome: true } });
+    navigate("/dashboard", { replace: true });
   };
 
-  const onLogout = () => {
-    localStorage.removeItem("token");
-    navigate("/", { replace: true });
-  };
   const onDeleteConfirm = async (id) => {
     setDeletingId(id);
     setConfirmId(null);
-
     const action = await dispatch(deleteSavedBillFromDB(id));
-
     setDeletingId(null);
-
     if (action.type.endsWith("/fulfilled")) {
-      showToast("success", "Deleted ✓");
+      showToast("success", "Bill Deleted");
       dispatch(fetchSavedBills());
       dispatch(fetchAllSavedBills());
     } else {
-      showToast("error", "Delete failed ✕");
+      showToast("error", "Delete failed");
     }
   };
 
-  return (
-    <div className="bill-wrapper saved-bills-wrapper">
-      <div className="saved-bills-header">
-        <h2>Saved Bills</h2>
-      </div>
+  // --- Search Modal Helpers ---
+  const monthRange = (yyyyMm) => {
+    if (!/^\d{4}-\d{2}$/.test(yyyyMm)) return { from: "", to: "" };
+    const [y, m] = yyyyMm.split("-").map(Number);
+    return { from: ymd(new Date(y, m - 1, 1)), to: ymd(new Date(y, m, 0)) };
+  };
+  const todayRange = () => { const t = ymd(new Date()); return { from: t, to: t }; };
+  const thisMonthRange = () => { const d = new Date(); return { from: ymd(new Date(d.getFullYear(), d.getMonth(), 1)), to: ymd(new Date(d.getFullYear(), d.getMonth() + 1, 0)) }; };
+  const lastMonthRange = () => { const d = new Date(); return { from: ymd(new Date(d.getFullYear(), d.getMonth() - 1, 1)), to: ymd(new Date(d.getFullYear(), d.getMonth(), 0)) }; };
 
-      <div className="bill-actions">
-        <button onClick={onBackToBill}>← Back to Bill</button>
-        <button
-          onClick={onLogout}
-          style={{ marginLeft: 10 }}
-        >
-          Logout
+  const handleSearch = () => {
+    let from = searchFromDate || ""; let to = searchToDate || "";
+    if (searchMonth) { const r = monthRange(searchMonth); from = r.from; to = r.to; dispatch(setSearchFromDate(from)); dispatch(setSearchToDate(to)); }
+    if (from && to && from > to) { const tmp = from; from = to; to = tmp; dispatch(setSearchFromDate(from)); dispatch(setSearchToDate(to)); }
+    dispatch(searchBillsFromDB({ billNo: searchBillNo, customerId: searchCustomerId, fromDate: from || null, toDate: to || null }));
+  };
+
+  const getCustomerLabel = (id) => {
+    const c = customers.find((x) => x.id === Number(id));
+    return c ? `${c.customerName} — ${c.customerAddress}` : "";
+  };
+
+  const hasSearchInput = searchBillNo || searchCustomerId || searchFromDate || searchToDate || searchMonth;
+
+  return (
+    <div className="bill-app-container">
+      {/* Action Bar */}
+      <div className="bill-action-bar">
+        <button className="action-btn outline" onClick={onBackToDashboard}>
+          ← Back
+        </button>
+        {/* We brought the Search button here! */}
+        <button className="action-btn primary" onClick={() => dispatch(openSearch())}>
+          🔍 Search Bills
         </button>
       </div>
 
-      {loading && <p style={{ textAlign: "center" }}>Loading...</p>}
-      {error && <p style={{ textAlign: "center", color: "red" }}>{String(error)}</p>}
+      {/* Main Content */}
+      <div className="saved-bills-content">
+        <div className="page-header">
+          <h2>Saved Bills</h2>
+          <p>Manage and review your past transactions</p>
+        </div>
 
-      {!loading && (!savedBills || savedBills.length === 0) && (
-        <p style={{ textAlign: "center" }}>No saved bills found.</p>
-      )}
+        {loading && !showSearchModal && <div className="loading-state">Loading bills...</div>}
+        {error && <div className="error-state">{String(error)}</div>}
+        
+        {!loading && (!savedBills || savedBills.length === 0) && !showSearchModal && (
+          <div className="empty-state">
+            <div className="empty-icon">📄</div>
+            <p>No saved bills found yet.</p>
+          </div>
+        )}
 
-      <div className="saved-bills-list">
-        {(savedBills || []).map((bill, billIndex) => {
-          const billItems = bill.billTable || bill.items || [];
-          const billDate = ymdToDmy(bill.billDate || bill.date || "");
-          const total = Number(bill.totalAmount ?? bill.total ?? 0);
-          const isConfirming = confirmId === bill.id;
-          const isDeleting = deletingId === bill.id;
+        <div className="bills-grid">
+          {(savedBills || []).map((bill, index) => {
+            const billDate = ymdToDmy(bill.billDate || bill.date || "");
+            const total = Number(bill.totalAmount ?? bill.total ?? 0);
+            const isConfirming = confirmId === bill.id;
+            const isDeleting = deletingId === bill.id;
+            const customerLine = [(bill.customerName || "").trim(), (bill.customerAddress || "").trim()].filter(Boolean).join(", ");
 
-          const customerLine = [(bill.customerName || "").trim(), (bill.customerAddress || "").trim()]
-            .filter(Boolean)
-            .join(" - ");
-
-          return (
-            <div key={bill.id ?? billIndex} className="saved-bill-item">
-              <div className="bill-paper" >
-                <div className="bill-info-row">
-                  <div>
-                    <strong>Bill No:</strong> {bill.billNo}
-                  </div>
-                  <div>
-                    <strong>Date:</strong> {billDate}
-                  </div>
+            return (
+              <div key={bill.id ?? index} className="bill-card" style={{ animationDelay: `${index * 0.05}s` }}>
+                <div className="bill-card-header">
+                  <span className="bill-card-no">#{bill.billNo}</span>
+                  <span className="bill-card-date">{billDate}</span>
                 </div>
-
-                <div className="bill-info-row">
-                  <div>
-                    <strong>Customer:</strong> {customerLine || bill.customerName}
+                <div className="bill-card-body">
+                  <div className="bill-card-customer">
+                    <span className="icon">👤</span> {customerLine || bill.customerName || "Unknown Customer"}
                   </div>
+                  <div className="bill-card-total">₹{total.toFixed(2)}</div>
                 </div>
-
-                <table className="bill-table">
-                  <thead>
-                    <tr>
-                      <th>S.No</th>
-                      <th>Particulars</th>
-                      <th>Kgs / Bunch</th>
-                      <th>Rate</th>
-                      <th>Amount</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {(billItems || []).map((item, index) => {
-                      const amount = (Number(item.qty) || 0) * (Number(item.price) || 0);
-                      return (
-                        <tr key={index}>
-                          <td>{index + 1}</td>
-                          <td>{item.name}</td>
-                          <td>{item.qty}</td>
-                          <td>{item.price}</td>
-                          <td>{amount ? amount.toFixed(2) : ""}</td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-
-                <div className="total-amount">Total: ₹ {total.toFixed(2)}</div>
-
-                <div style={styles.actionBar}>
-                  <button style={styles.editBtn} onClick={() => onEdit(bill)} disabled={isDeleting}>
-                    ✏️ Edit
+                <div className="bill-card-actions">
+                  <button className="card-btn edit" onClick={() => onEdit(bill)} disabled={isDeleting || isConfirming}>
+                    ✏️ Edit / View
                   </button>
-
                   {!isConfirming ? (
-                    <button
-                      style={styles.deleteBtn}
-                      onClick={() => setConfirmId(bill.id)}
-                      disabled={isDeleting}
-                    >
-                      🗑️ Delete
-                    </button>
+                    <button className="card-btn delete" onClick={() => setConfirmId(bill.id)} disabled={isDeleting}>🗑️ Delete</button>
                   ) : (
-                    <div style={styles.confirmRow}>
-                      <span style={styles.confirmText}>Delete this bill?</span>
-                      <button
-                        style={styles.confirmYes}
-                        onClick={() => onDeleteConfirm(bill.id)}
-                        disabled={isDeleting}
-                      >
-                        {isDeleting ? "Deleting..." : "Yes, Delete"}
-                      </button>
-                      <button style={styles.confirmNo} onClick={() => setConfirmId(null)}>
-                        Cancel
-                      </button>
+                    <div className="card-confirm-actions">
+                      <span className="confirm-msg">Sure?</span>
+                      <button className="card-btn confirm-yes" onClick={() => onDeleteConfirm(bill.id)} disabled={isDeleting}>{isDeleting ? "..." : "Yes"}</button>
+                      <button className="card-btn confirm-no" onClick={() => setConfirmId(null)}>No</button>
                     </div>
                   )}
                 </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
 
-      {/* ✅ inline toast */}
+      {/* --- SEARCH MODAL (Ported from Bill.jsx) --- */}
+      {showSearchModal && (
+        <div className="search-modal-overlay">
+          <div className="search-modal">
+            <h3>Search Bills</h3>
+            <div className="search-inputs">
+              <div className="search-input-group">
+                <label>Bill No:</label>
+                <input type="text" value={searchBillNo} onChange={(e) => dispatch(setSearchBillNo(e.target.value))} onKeyDown={(e) => e.key === "Enter" && handleSearch()} placeholder="e.g. 001" />
+              </div>
+              <div className="search-input-group">
+                <label>Customer ID:</label>
+                <input type="text" value={searchCustomerId} onChange={(e) => dispatch(setSearchCustomerId(e.target.value))} onKeyDown={(e) => e.key === "Enter" && handleSearch()} placeholder="e.g. 1" />
+                {searchCustomerId && <small className="helper-text">{getCustomerLabel(searchCustomerId) || "Unknown customer"}</small>}
+              </div>
+              <div className="search-input-group">
+                <label>Month:</label>
+                <input type="month" value={searchMonth} onChange={(e) => setSearchMonth(e.target.value)} />
+              </div>
+              <div className="search-input-group">
+                <label>From Date:</label>
+                <input type="date" value={searchFromDate} onChange={(e) => { setSearchMonth(""); dispatch(setSearchFromDate(e.target.value)); }} onKeyDown={(e) => e.key === "Enter" && handleSearch()} />
+              </div>
+              <div className="search-input-group">
+                <label>To Date:</label>
+                <input type="date" value={searchToDate} onChange={(e) => { setSearchMonth(""); dispatch(setSearchToDate(e.target.value)); }} onKeyDown={(e) => e.key === "Enter" && handleSearch()} />
+              </div>
+              <div className="search-input-group quick-filters">
+                <label>Quick:</label>
+                <div className="quick-btn-group">
+                  <button type="button" onClick={() => { const r = todayRange(); setSearchMonth(""); dispatch(setSearchFromDate(r.from)); dispatch(setSearchToDate(r.to)); }}>Today</button>
+                  <button type="button" onClick={() => { const r = thisMonthRange(); setSearchMonth(""); dispatch(setSearchFromDate(r.from)); dispatch(setSearchToDate(r.to)); }}>This Month</button>
+                  <button type="button" onClick={() => { const r = lastMonthRange(); setSearchMonth(""); dispatch(setSearchFromDate(r.from)); dispatch(setSearchToDate(r.to)); }}>Last Month</button>
+                  <button type="button" onClick={() => { setSearchMonth(""); dispatch(setSearchBillNo("")); dispatch(setSearchCustomerId("")); dispatch(setSearchFromDate("")); dispatch(setSearchToDate("")); }}>Clear</button>
+                </div>
+              </div>
+            </div>
+
+            <div className="search-buttons">
+              <button className="primary" onClick={handleSearch} disabled={loading}>{loading ? "Searching..." : "Search"}</button>
+              <button className="outline" onClick={() => dispatch(closeSearch())}>Close</button>
+            </div>
+
+            {searchResults.length > 0 && (
+              <div className="search-results">
+                <h4>Results: {searchResults.length} bill{searchResults.length !== 1 ? "s" : ""} found</h4>
+                <div className="results-list">
+                  {searchResults.map((bill, index) => (
+                    <div key={index} className="result-item" onClick={() => onEdit(bill)}>
+                      <div><strong>Bill No: {bill.billNo}</strong></div>
+                      <div>Customer: {bill.customerName} (ID: {bill.customerId})</div>
+                      <div>Date: {String(bill.billDate || bill.date || "").slice(0, 10).split('-').reverse().join('-')}</div>
+                      <div className="result-total">Total: ₹{Number(bill.totalAmount ?? bill.total ?? 0).toFixed(2)}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            {!loading && searchResults.length === 0 && hasSearchInput && (<p className="no-results">No bills found.</p>)}
+          </div>
+        </div>
+      )}
+
       {toast.show && (
-        <div
-          style={{
-            position: "fixed",
-            right: 16,
-            bottom: 16,
-            zIndex: 9999,
-            maxWidth: 360,
-            width: "calc(100% - 32px)"
-          }}
-          role="status"
-          aria-live="polite"
-        >
-          <div
-            style={{
-              display: "flex",
-              gap: 10,
-              alignItems: "center",
-              padding: "12px 14px",
-              borderRadius: 14,
-              background: "#fff",
-              border: "1px solid rgba(0,0,0,0.08)",
-              boxShadow: "0 12px 30px rgba(0,0,0,0.14)"
-            }}
-          >
-            <div
-              style={{
-                width: 28,
-                height: 28,
-                borderRadius: 999,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontWeight: 800,
-                background:
-                  toast.type === "success"
-                    ? "rgba(16,185,129,.18)"
-                    : "rgba(239,68,68,.18)"
-              }}
-              aria-hidden="true"
-            >
+        <div className="toast-notification" role="status" aria-live="polite">
+          <div className="toast-content">
+            <div className={`toast-icon ${toast.type}`}>
               {toast.type === "success" ? "✓" : "!"}
             </div>
-
-            <div style={{ fontSize: 13, fontWeight: 700, color: "#111", lineHeight: 1.2 }}>
-              {toast.text}
-            </div>
-
-            <button
-              onClick={() => setToast((t) => ({ ...t, show: false }))}
-              style={{
-                marginLeft: "auto",
-                border: "none",
-                background: "transparent",
-                fontSize: 18,
-                cursor: "pointer",
-                opacity: 0.6
-              }}
-              aria-label="Close"
-            >
-              ×
-            </button>
+            <div className="toast-text">{toast.text}</div>
+            <button onClick={() => setToast((t) => ({ ...t, show: false }))} className="toast-close">×</button>
           </div>
         </div>
       )}
     </div>
   );
 }
-
-const styles = {
-  actionBar: {
-    display: "flex",
-    alignItems: "center",
-    gap: "10px",
-    marginTop: "14px",
-    paddingTop: "12px",
-    borderTop: "1px solid #e2e8f0",
-    flexWrap: "wrap"
-  },
-  editBtn: {
-    padding: "8px 20px",
-    background: "#ebf8ff",
-    border: "1px solid #90cdf4",
-    borderRadius: "7px",
-    cursor: "pointer",
-    fontSize: "13px",
-    fontWeight: 600,
-    color: "#2b6cb0"
-  },
-  deleteBtn: {
-    padding: "8px 20px",
-    background: "#fff5f5",
-    border: "1px solid #feb2b2",
-    borderRadius: "7px",
-    cursor: "pointer",
-    fontSize: "13px",
-    fontWeight: 600,
-    color: "#c53030"
-  },
-  confirmRow: {
-    display: "flex",
-    alignItems: "center",
-    gap: "8px",
-    flexWrap: "wrap"
-  },
-  confirmText: {
-    fontSize: "13px",
-    fontWeight: 600,
-    color: "#c53030"
-  },
-  confirmYes: {
-    padding: "7px 16px",
-    background: "#c53030",
-    border: "none",
-    borderRadius: "7px",
-    cursor: "pointer",
-    fontSize: "13px",
-    fontWeight: 600,
-    color: "#fff"
-  },
-  confirmNo: {
-    padding: "7px 16px",
-    background: "#e2e8f0",
-    border: "none",
-    borderRadius: "7px",
-    cursor: "pointer",
-    fontSize: "13px",
-    fontWeight: 600,
-    color: "#4a5568"
-  }
-};
 
 export default SavedBills;
