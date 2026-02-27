@@ -952,7 +952,9 @@
   font-weight: 600;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2; /* <-- Added standard fallback */
   -webkit-box-orient: vertical;
+  box-orient: vertical; /* <-- Added standard fallback */
   overflow: hidden;
   line-height: 1.5;
 }

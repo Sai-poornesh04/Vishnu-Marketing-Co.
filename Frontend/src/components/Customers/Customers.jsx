@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "../Bill/bill.css"; // 🔥 Reusing our premium layout and navbar styles!
+import "../Bill/bill.css"; 
 import "./customer.css";
 
 const API = "https://vishnu-marketing-co.onrender.com/api/customers";
@@ -12,6 +12,11 @@ export default function Customers() {
   const [loading, setLoading] = useState(false);
   const [savingId, setSavingId] = useState(null);
   const [error, setError] = useState("");
+
+  // Add Customer Modal State
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [adding, setAdding] = useState(false);
+  const [newCust, setNewCust] = useState({ name: "", address: "" });
 
   // filters
   const [q, setQ] = useState("");
@@ -64,6 +69,36 @@ export default function Customers() {
 
   const onChange = (id, key, val) => {
     setRows((prev) => prev.map((r) => (r.id === id ? { ...r, [key]: val } : r)));
+  };
+
+  // --- ADD NEW CUSTOMER LOGIC ---
+  const handleAddCustomer = async (e) => {
+    e.preventDefault();
+    const name = newCust.name.trim();
+    const addr = newCust.address.trim();
+
+    if (!name) return showToast("error", "Customer name is required");
+
+    setAdding(true);
+    try {
+      const res = await fetch(`${API}/add`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ customerName: name, customerAddress: addr })
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.message || data?.error || `HTTP ${res.status}`);
+
+      showToast("success", "Customer Added Successfully!");
+      setShowAddModal(false);
+      setNewCust({ name: "", address: "" }); // reset form
+      load(); // refresh the table
+    } catch (e) {
+      showToast("error", String(e.message || "Failed to add customer"));
+    } finally {
+      setAdding(false);
+    }
   };
 
   const save = async (row) => {
@@ -151,7 +186,6 @@ export default function Customers() {
           ← Back
         </button>
         
-        {/* Save All is now front and center! */}
         <button 
           className={`action-btn ${dirtyCount > 0 ? "primary" : "outline"}`} 
           onClick={saveAll} 
@@ -185,6 +219,10 @@ export default function Customers() {
           </div>
 
           <div className="filter-toggles">
+            <button className="action-btn primary" onClick={() => setShowAddModal(true)}>
+              ➕ Add Customer
+            </button>
+            
             <label className={`toggle-pill ${onlyChanged ? 'active' : ''}`}>
               <input
                 type="checkbox"
@@ -267,6 +305,44 @@ export default function Customers() {
           <span>Currently Showing: <strong>{filtered.length}</strong></span>
         </div>
       </div>
+
+      {/* --- ADD CUSTOMER MODAL --- */}
+      {showAddModal && (
+        <div className="search-modal-overlay" onClick={() => setShowAddModal(false)}>
+          <div className="search-modal" onClick={e => e.stopPropagation()}>
+            <h3>Add New Customer</h3>
+            <form onSubmit={handleAddCustomer} className="search-inputs">
+              <div className="search-input-group">
+                <label>Customer Name *</label>
+                <input 
+                  autoFocus
+                  value={newCust.name} 
+                  onChange={e => setNewCust({...newCust, name: e.target.value})} 
+                  placeholder="e.g. Masaladhar Tadaka restaurant"
+                  required
+                />
+              </div>
+              <div className="search-input-group">
+                <label>Address</label>
+                <input 
+                  value={newCust.address} 
+                  onChange={e => setNewCust({...newCust, address: e.target.value})} 
+                  placeholder="e.g. M6 Velachery Chennai"
+                />
+              </div>
+              
+              <div className="search-buttons" style={{ marginTop: "10px" }}>
+                <button type="button" className="action-btn outline" onClick={() => setShowAddModal(false)}>
+                  Cancel
+                </button>
+                <button type="submit" className="action-btn primary" disabled={adding}>
+                  {adding ? "Adding..." : "Save Customer"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Toast */}
       {toast.show && (
