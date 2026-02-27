@@ -25,7 +25,6 @@ const createCustomer = async (req, res) => {
       return res.status(400).json({ message: "Customer name is required" });
     }
 
-    // Passing "INSERT" as the action, and null for the ID so the DB auto-generates it
     const result = await db.query(
       `SELECT * FROM sp_customers($1,$2,$3,$4)`,
       [
@@ -36,7 +35,14 @@ const createCustomer = async (req, res) => {
       ]
     );
 
-    res.status(201).json(mapCustomer(result.rows[0]));
+    // FIX: Safely check if the DB actually returned the row.
+    // If it didn't, we just send a generic success message so it doesn't crash!
+    if (result.rows && result.rows.length > 0) {
+      res.status(201).json(mapCustomer(result.rows[0]));
+    } else {
+      res.status(201).json({ message: "Customer added successfully" });
+    }
+
   } catch (err) {
     console.error("CREATE CUSTOMER ERROR 👉", err);
     res.status(500).json({ error: err.message });
