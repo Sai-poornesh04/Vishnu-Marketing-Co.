@@ -14,6 +14,35 @@ const mapCustomer = (c) => ({
   createdAt: c.createdat
 });
 
+// -------------------- CREATE (ADD) --------------------
+
+const createCustomer = async (req, res) => {
+  try {
+    const customerName = String(req.body.customerName ?? "").trim();
+    const customerAddress = String(req.body.customerAddress ?? "").trim();
+
+    if (!customerName) {
+      return res.status(400).json({ message: "Customer name is required" });
+    }
+
+    // Passing "INSERT" as the action, and null for the ID so the DB auto-generates it
+    const result = await db.query(
+      `SELECT * FROM sp_customers($1,$2,$3,$4)`,
+      [
+        "INSERT",
+        null, 
+        customerName,
+        customerAddress
+      ]
+    );
+
+    res.status(201).json(mapCustomer(result.rows[0]));
+  } catch (err) {
+    console.error("CREATE CUSTOMER ERROR 👉", err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
 // -------------------- GET BY ID --------------------
 
 const getCustomerById = async (req, res) => {
@@ -92,5 +121,6 @@ const updateCustomer = async (req, res) => {
 module.exports = {
   getCustomerById,
   getAllCustomers,
-  updateCustomer
+  updateCustomer,
+  createCustomer
 };
