@@ -70,8 +70,6 @@
     padding-bottom: calc(6px + env(safe-area-inset-bottom));
     z-index: 999;
     /* Forces it above absolutely everything */
-
-    /* REMOVED overflow-x: auto to prevent the dropdowns from being clipped/hidden! */
   }
 
   .action-btn {
@@ -285,7 +283,6 @@
   color: #dc2626;
 }
 
-
 /* =========================================================
    3. SCROLL AREA (Adjusted for floating navbar)
    ========================================================= */
@@ -299,34 +296,37 @@
   overscroll-behavior-y: contain;
 }
 
-@media (min-width: 768px) {
-  .bill-scroll-area {
-    padding: 40px;
-    padding-top: 100px;
-    /* Clears the floating desktop pill */
-    padding-bottom: 60px;
-  }
-}
-
 @media (max-width: 767px) {
   .bill-scroll-area {
-    padding-bottom: 100px;
-    /* Clears the floating mobile dock */
+    padding: 10px; /* Tighter padding to maximize phone screen space */
+    padding-bottom: 110px; /* Clears the floating mobile dock */
+  }
+
+  /* 🔥 1. FULLY ZOOMED OUT BY DEFAULT */
+  .bill-paper {
+    /* Mathematically shrinks the 700px bill to fit ANY phone screen perfectly */
+    zoom: calc(100vw / 740); 
+    margin: 0 auto;
+    /* Smooth transition for browsers that support zoom animation */
+    transition: zoom 0.2s ease-out; 
+  }
+
+  /* 🔥 2. ZOOM IN ON TAP */
+  /* The instant the user taps ANY input inside the bill, zoom back to 100% */
+  .bill-paper:focus-within {
+    zoom: 1;
   }
 }
 
-
 /* =========================================================
-   4. THE STRICT BILL FORMAT (UNTOUCHED LOGIC)
+   4. THE STRICT BILL FORMAT (UI / WHATSAPP SHARE TWEAKS)
    ========================================================= */
 .bill-paper {
   background: white;
-  padding: 24px 32px;
+  padding: 12px 24px; /* 🔥 Reduced padding so the table has more room */
   border: 1px solid #d1d5db;
   min-width: 700px;
-  /* CRITICAL: Forces exact printed layout */
   max-width: 700px;
-  /* Keeps it tight */
   margin: 0 auto;
   font-family: "Times New Roman", serif;
   color: #111;
@@ -345,19 +345,19 @@
 
 .shop-name {
   color: #cc0000;
-  font-size: 26px;
+  font-size: 24px; /* 🔥 Slightly smaller */
   text-align: center;
-  margin-bottom: 4px;
-  padding-bottom: 8px;
+  margin-bottom: 2px; /* 🔥 Tighter margin */
+  padding-bottom: 2px;
   font-weight: bold;
-  letter-spacing: 1.5px;
+  letter-spacing: 1px;
   text-transform: uppercase;
 }
 
 .shop-subtitle {
   text-align: center;
-  font-size: 15px;
-  margin: 0 0 4px 0;
+  font-size: 13px; /* 🔥 Slightly smaller */
+  margin: 0 0 2px 0;
   font-style: italic;
   font-weight: 600;
   color: #38761d;
@@ -365,8 +365,8 @@
 
 .contact {
   text-align: center;
-  font-size: 14px;
-  margin-bottom: 16px;
+  font-size: 13px;
+  margin-bottom: 8px; /* 🔥 Tighter margin */
   color: #38761d;
 }
 
@@ -375,16 +375,16 @@
   justify-content: space-between;
   border-top: 1px solid #38761d;
   border-bottom: 1px solid #38761d;
-  padding: 10px 0;
+  padding: 6px 0; /* 🔥 Tighter padding */
   font-size: 14px;
   font-weight: 600;
   color: #38761d;
 }
 
 .to-section {
-  margin-bottom: 12px;
+  margin-bottom: 8px; /* 🔥 Tighter margin */
   border-bottom: none;
-  font-weight: "Georgia", "Times New Roman", Times, serif !important;;
+  font-weight: "Georgia", "Times New Roman", Times, serif !important;
   font-style: inherit;
 }
 
@@ -418,23 +418,24 @@
 .bill-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 14px;
-  margin-bottom: 12px;
+  font-size: 13px; /* 🔥 Smaller base font */
+  margin-bottom: 6px; /* 🔥 Tighter margin */
   color: #38761d;
 }
 
 .bill-table th,
 .bill-table td {
   border: 1px solid #38761d;
-  padding: 6px 12px;
+  padding: 2px 4px; /* 🔥 MASSIVE REDUCTION */
   text-align: center;
   vertical-align: middle;
+  height: 20px; /* 🔥 Forces a strict maximum row height so 40 rows don't overflow */
 }
 
 .bill-table th {
   background-color: #d9ead3;
   font-weight: bold;
-  padding: 8px 12px;
+  padding: 4px 6px; 
 }
 
 .bill-table td:nth-child(2),
@@ -449,9 +450,10 @@
   outline: none;
   background: transparent;
   font-family: inherit;
-  font-size: inherit;
+  font-size: 13px; /* 🔥 Match the new smaller table font */
   color: #111;
-  padding: 4px;
+  padding: 0px; /* 🔥 Stripped input padding */
+  margin: 0px;
   box-sizing: border-box;
 }
 
@@ -463,36 +465,35 @@
   display: flex;
   justify-content: space-between;
   border-top: 2px solid #38761d;
-  padding-top: 12px;
+  padding-top: 8px; /* 🔥 Tighter padding */
   font-weight: 600;
-  font-size: 16px;
+  font-size: 15px;
   color: #38761d;
 }
 
 .note-section {
   color: #cc0000;
   font-weight: 600;
-  margin-bottom: 8px;
-  font-size: 14px;
+  margin-bottom: 6px; /* 🔥 Tighter margin */
+  font-size: 13px;
   line-height: 1.4;
 }
 
 .total-amount {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: bold;
   text-align: right;
   min-width: 150px;
 }
 
 .footer-sign {
-  margin-top: 30px;
-  font-size: 14px;
+  margin-top: 15px; /* 🔥 Tighter margin */
+  font-size: 13px;
   font-weight: bold;
   text-align: right;
   font-style: italic;
   color: #38761d;
 }
-
 
 /* =========================================================
    5. MODALS, TOASTS & SEARCH
@@ -771,13 +772,12 @@
 }
 
 /* =========================================================
-   6. PRINT RULES (ABSOLUTELY NO CHANGES)
+   6. PRINT RULES (🔥 AGGRESSIVE SQUISH TO FIT 40 ROWS ON 1 PAGE)
    ========================================================= */
 @media print {
-  /* Set minimal margins to maximize paper usage */
-  @page { size: A4 portrait; margin: 5mm; }
+  /* Extreme minimal margins to fit 40 rows on A4 */
+  @page { size: A4 portrait; margin: 3mm; } 
   
-  /* Force exact colors so backgrounds print nicely */
   body { 
     background: white; 
     margin: 0; 
@@ -796,33 +796,33 @@
     box-shadow: none; 
     border: none; 
     margin: 0; 
-    padding: 0; /* Remove padding to save vertical space */
+    padding: 0; 
     page-break-inside: avoid; 
   }
   
-  /* Aggressively tighten vertical spacing to fit 30 rows */
-  .shop-name { font-size: 22px; margin-bottom: 2px; padding-bottom: 2px; }
-  .shop-subtitle { font-size: 13px; margin-bottom: 2px; }
-  .contact { margin-bottom: 8px; font-size: 13px; }
-  .bill-info-row { padding: 4px 0; font-size: 13px; }
-  .to-section { margin-bottom: 6px; }
+  /* Aggressively tighten header spacing */
+  .shop-name { font-size: 20px; margin-bottom: 0px; padding-bottom: 0px; }
+  .shop-subtitle { font-size: 12px; margin-bottom: 0px; }
+  .contact { margin-bottom: 4px; font-size: 12px; }
+  .bill-info-row { padding: 2px 0; font-size: 12px; }
+  .to-section { margin-bottom: 2px; }
   
-  /* Shrink table padding specifically for the printer */
-  .bill-table { margin-bottom: 6px; }
+  /* The ultimate 40-row squish */
+  .bill-table { margin-bottom: 2px; }
   .bill-table th, .bill-table td { 
-    padding: 3px 6px !important; /* Huge space saver */
-    font-size: 12px !important; 
+    padding: 1px 2px !important; 
+    font-size: 11px !important; 
+    height: 16px !important; /* Strict height limit for printer */
   }
   
-  /* Make inputs look like regular text on paper */
   .table-input, .editable-span { 
     padding: 0 !important; 
-    font-size: 12px !important; 
+    font-size: 11px !important; 
     color: #000 !important;
   }
   
-  .total-section { padding-top: 6px; font-size: 14px; }
-  .footer-sign { margin-top: 15px; font-size: 13px; }
+  .total-section { padding-top: 4px; font-size: 13px; }
+  .footer-sign { margin-top: 5px; font-size: 12px; }
 }
 
 /* =========================================================

@@ -324,9 +324,10 @@ function Bill() {
     dispatch(setCustomerName(bill.customerName || ""));
     dispatch(setCustomerAddress(bill.customerAddress || ""));
 
+    // 🔥 UPDATED TO 40 ROWS
     const paddedItems = [
       ...billItems.map((x) => ({ name: x.name || "", qty: x.qty || "", price: x.price || "" })),
-      ...Array.from({ length: Math.max(0, 30 - billItems.length) }, () => ({ name: "", qty: "", price: "" }))
+      ...Array.from({ length: Math.max(0, 40 - billItems.length) }, () => ({ name: "", qty: "", price: "" }))
     ];
 
     paddedItems.forEach((item, idx) => {

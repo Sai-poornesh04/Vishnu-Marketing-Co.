@@ -32,10 +32,10 @@ const baseItems = [
   { name: "Pine apple", qty: "", price: "" },
   { name: "Watermelon", qty: "", price: "" },
   { name: "Apple", qty: "", price: "" }
-
 ];
 
-const ROWS = 30;
+// 🔥 UPDATED TO 40 ROWS
+const ROWS = 40;
 
 const makeInitialItems = () => {
   const fixedBase = baseItems.slice(0, ROWS).map((x) => ({ ...x }));
