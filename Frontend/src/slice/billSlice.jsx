@@ -20,18 +20,25 @@ const baseItems = [
   { name: "Mushroom(200g)pac", qty: "", price: "" },
   { name: "Broccoli", qty: "", price: "" },
   { name: "Garlic", qty: "", price: "" },
+  { name: "Peeled Garlic", qty: "", price: "" },
   { name: "Big Onion", qty: "", price: "" },
   { name: "Beans", qty: "", price: "" },
   { name: "Coriander", qty: "", price: "" },
+  { name: "Coriander Big", qty: "", price: "" },
   { name: "Mint", qty: "", price: "" },
   { name: "Capsicum", qty: "", price: "" },
   { name: "Colour Capsicum", qty: "", price: "" },
   { name: "Celery", qty: "", price: "" },
+  { name: "Beetroot", qty: "", price: "" },
+  { name: "Ladys Finger", qty: "", price: "" },
+  { name: "Green Leduce", qty: "", price: "" },
+  { name: "Bottleguard", qty: "", price: "" },
   { name: "Zucchini Mix", qty: "", price: "" },
   { name: "Basil / pearsley", qty: "", price: "" },
   { name: "Pine apple", qty: "", price: "" },
   { name: "Watermelon", qty: "", price: "" },
-  { name: "Apple", qty: "", price: "" }
+  { name: "Apple", qty: "", price: "" },
+  { name: "Stf veg", qty: "", price: "" }
 ];
 
 // 🔥 UPDATED TO 40 ROWS
