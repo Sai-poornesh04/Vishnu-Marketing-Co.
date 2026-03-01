@@ -436,11 +436,11 @@ function Bill() {
 
           <table className="bill-table">
             <colgroup>
-              <col style={{ width: "6%" }} />  {/* S.No */}
-              <col style={{ width: "32%" }} /> {/* Particulars */}
-              <col style={{ width: "24%" }} /> {/* Kgs / Bunch */}
-              <col style={{ width: "20%" }} /> {/* Rate */}
-              <col style={{ width: "28%" }} /> {/* Amount */}
+              <col style={{ width: "6%" }} />  
+              <col style={{ width: "32%" }} /> 
+              <col style={{ width: "24%" }} /> 
+              <col style={{ width: "20%" }} /> 
+              <col style={{ width: "28%" }} />
             </colgroup>
             <thead>
               <tr>

@@ -291,30 +291,15 @@
   overflow-x: auto;
   overflow-y: auto;
   padding: 20px;
-  -webkit-overflow-scrolling: touch; /* Buttery smooth scroll on iOS/Mobile */
+  -webkit-overflow-scrolling: touch; 
   will-change: scroll-position;
   overscroll-behavior-y: contain;
 }
 
-@media (max-width: 767px) {
+/* Add this to push the bill down below your glassy navbar on desktop */
+@media (min-width: 768px) {
   .bill-scroll-area {
-    padding: 10px; /* Tighter padding to maximize phone screen space */
-    padding-bottom: 110px; /* Clears the floating mobile dock */
-  }
-
-  /* 🔥 1. FULLY ZOOMED OUT BY DEFAULT */
-  .bill-paper {
-    /* Mathematically shrinks the 700px bill to fit ANY phone screen perfectly */
-    zoom: calc(100vw / 740); 
-    margin: 0 auto;
-    /* Smooth transition for browsers that support zoom animation */
-    transition: zoom 0.2s ease-out; 
-  }
-
-  /* 🔥 2. ZOOM IN ON TAP */
-  /* The instant the user taps ANY input inside the bill, zoom back to 100% */
-  .bill-paper:focus-within {
-    zoom: 1;
+    padding-top: 90px; /* Adjust this value if your navbar gets taller */
   }
 }
 
