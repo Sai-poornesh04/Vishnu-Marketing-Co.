@@ -20,18 +20,18 @@
    2. ADVANCED GLASS NAVBAR (ACTION BAR)
    ========================================================= */
 .bill-action-bar {
-  /* Glassmorphism base */
-  background: rgba(255, 255, 255, 0.65);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+  /* Premium Glassmorphism */
+  background: rgba(255, 255, 255, 0.35); /* More transparent */
+  backdrop-filter: saturate(180%) blur(24px); /* Saturation makes background colors pop */
+  -webkit-backdrop-filter: saturate(180%) blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.8); /* Sharp glass edge reflection */
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12); /* Deeper, softer shadow */
+  
   z-index: 50;
   transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
   transform: translateZ(0); 
   will-change: backdrop-filter, transform;
   backface-visibility: hidden;
-
 }
 
 /* --- DESKTOP: Floating Pill --- */
@@ -153,6 +153,18 @@
   border-color: #38761d;
 }
 
+/* Logout / Danger Buttons */
+.action-btn.danger-outline {
+  border-color: rgba(220, 38, 38, 0.3);
+  color: #dc2626;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.action-btn.danger-outline:hover {
+  background: #fef2f2;
+  border-color: #dc2626;
+}
+
 /* Dropdowns positioning */
 .menu-container,
 .share-container {
@@ -161,7 +173,6 @@
 }
 
 @media (min-width: 768px) {
-
   .menu-container,
   .share-container {
     flex: none;
@@ -169,7 +180,6 @@
 }
 
 @media (max-width: 767px) {
-
   .menu-container,
   .share-container {
     flex: 1 0 auto;
@@ -205,7 +215,6 @@
     opacity: 0;
     transform: scale(0.95) translateY(-10px);
   }
-
   100% {
     opacity: 1;
     transform: scale(1) translateY(0);
@@ -216,7 +225,6 @@
   .dropdown-menu {
     top: calc(100% + 12px);
   }
-
   .share-menu {
     right: 0;
     transform-origin: top right;
@@ -229,13 +237,11 @@
     top: auto;
     transform-origin: bottom center;
   }
-
   @keyframes dropdownPop {
     0% {
       opacity: 0;
       transform: scale(0.95) translateY(10px);
     }
-
     100% {
       opacity: 1;
       transform: scale(1) translateY(0);
@@ -284,7 +290,7 @@
 }
 
 /* =========================================================
-   3. SCROLL AREA (Adjusted for floating navbar)
+   3. SCROLL AREA
    ========================================================= */
 .bill-scroll-area {
   flex: 1;
@@ -296,10 +302,10 @@
   overscroll-behavior-y: contain;
 }
 
-/* Add this to push the bill down below your glassy navbar on desktop */
+/* Push the bill down below your glassy navbar on desktop */
 @media (min-width: 768px) {
   .bill-scroll-area {
-    padding-top: 90px; /* Adjust this value if your navbar gets taller */
+    padding-top: 90px;
   }
 }
 
@@ -308,7 +314,7 @@
    ========================================================= */
 .bill-paper {
   background: white;
-  padding: 12px 24px; /* 🔥 Reduced padding so the table has more room */
+  padding: 12px 24px;
   border: 1px solid #d1d5db;
   min-width: 700px;
   max-width: 700px;
@@ -330,9 +336,9 @@
 
 .shop-name {
   color: #cc0000;
-  font-size: 24px; /* 🔥 Slightly smaller */
+  font-size: 24px;
   text-align: center;
-  margin-bottom: 2px; /* 🔥 Tighter margin */
+  margin-bottom: 2px;
   padding-bottom: 2px;
   font-weight: bold;
   letter-spacing: 1px;
@@ -341,7 +347,7 @@
 
 .shop-subtitle {
   text-align: center;
-  font-size: 13px; /* 🔥 Slightly smaller */
+  font-size: 13px;
   margin: 0 0 2px 0;
   font-style: italic;
   font-weight: 600;
@@ -351,7 +357,7 @@
 .contact {
   text-align: center;
   font-size: 13px;
-  margin-bottom: 8px; /* 🔥 Tighter margin */
+  margin-bottom: 8px;
   color: #38761d;
 }
 
@@ -360,14 +366,14 @@
   justify-content: space-between;
   border-top: 1px solid #38761d;
   border-bottom: 1px solid #38761d;
-  padding: 6px 0; /* 🔥 Tighter padding */
+  padding: 6px 0;
   font-size: 14px;
   font-weight: 600;
   color: #38761d;
 }
 
 .to-section {
-  margin-bottom: 8px; /* 🔥 Tighter margin */
+  margin-bottom: 8px;
   border-bottom: none;
   font-weight: "Georgia", "Times New Roman", Times, serif !important;
   font-style: inherit;
@@ -403,18 +409,18 @@
 .bill-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 13px; /* 🔥 Smaller base font */
-  margin-bottom: 6px; /* 🔥 Tighter margin */
+  font-size: 13px;
+  margin-bottom: 6px;
   color: #38761d;
 }
 
 .bill-table th,
 .bill-table td {
   border: 1px solid #38761d;
-  padding: 2px 4px; /* 🔥 MASSIVE REDUCTION */
+  padding: 2px 4px;
   text-align: center;
   vertical-align: middle;
-  height: 20px; /* 🔥 Forces a strict maximum row height so 40 rows don't overflow */
+  height: 20px;
 }
 
 .bill-table th {
@@ -435,9 +441,9 @@
   outline: none;
   background: transparent;
   font-family: inherit;
-  font-size: 13px; /* 🔥 Match the new smaller table font */
+  font-size: 13px;
   color: #111;
-  padding: 0px; /* 🔥 Stripped input padding */
+  padding: 0px;
   margin: 0px;
   box-sizing: border-box;
 }
@@ -450,7 +456,7 @@
   display: flex;
   justify-content: space-between;
   border-top: 2px solid #38761d;
-  padding-top: 8px; /* 🔥 Tighter padding */
+  padding-top: 8px;
   font-weight: 600;
   font-size: 15px;
   color: #38761d;
@@ -459,7 +465,7 @@
 .note-section {
   color: #cc0000;
   font-weight: 600;
-  margin-bottom: 6px; /* 🔥 Tighter margin */
+  margin-bottom: 6px;
   font-size: 13px;
   line-height: 1.4;
 }
@@ -472,12 +478,21 @@
 }
 
 .footer-sign {
-  margin-top: 15px; /* 🔥 Tighter margin */
+  margin-top: 15px;
   font-size: 13px;
   font-weight: bold;
   text-align: right;
   font-style: italic;
   color: #38761d;
+}
+
+/* Base Desktop Column Widths */
+@media (min-width: 768px) {
+  .col-sno { width: 6%; }
+  .col-particulars { width: 34%; }
+  .col-qty { width: 20%; }
+  .col-rate { width: 20%; }
+  .col-amount { width: 20%; }
 }
 
 /* =========================================================
@@ -749,7 +764,6 @@
     opacity: 0;
     transform: scale(0.9) translateY(10px);
   }
-
   100% {
     opacity: 1;
     transform: scale(1) translateY(0);
@@ -757,7 +771,7 @@
 }
 
 /* =========================================================
-   6. PRINT RULES (🔥 AGGRESSIVE SQUISH TO FIT 40 ROWS ON 1 PAGE)
+   6. PRINT RULES & MOBILE RESPONSIVE
    ========================================================= */
 @media print {
   /* Extreme minimal margins to fit 40 rows on A4 */
@@ -810,6 +824,75 @@
   .footer-sign { margin-top: 5px; font-size: 12px; }
 }
 
+@media (max-width: 767px) {
+  .bill-scroll-area {
+    padding: 10px;
+    padding-bottom: 110px; /* Clears floating dock */
+  }
+
+  /* 1. Kill the old zoom hack and let it be fluid */
+  .bill-paper {
+    min-width: 100% !important;
+    max-width: 100% !important;
+    padding: 12px 6px !important; /* Tighter outer edges */
+    zoom: 1 !important; 
+    transition: none;
+    overflow-x: hidden;
+  }
+
+  /* 2. Fluid Table Squish */
+  .bill-table {
+    table-layout: fixed; /* CRITICAL: Forces strict column adherence */
+    width: 100%;
+  }
+
+  /* 3. Strict Column Widths (Total = 100%) */
+  .col-sno { width: 9%; }
+  .col-particulars { width: 41%; }
+  .col-qty { width: 16%; }
+  .col-rate { width: 16%; }
+  .col-amount { width: 18%; }
+
+  /* 4. Compact Headers & UI Trick */
+  .bill-table th {
+    font-size: 11px !important;
+    padding: 6px 2px !important;
+    letter-spacing: -0.5px;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+
+  /* UX Trick: Swap "Kgs / Bunch" to just "Qty" to save pixels */
+  .bill-table th:nth-child(3) {
+    font-size: 0 !important; 
+  }
+  .bill-table th:nth-child(3)::after {
+    content: "Qty";
+    font-size: 11px;
+  }
+
+  /* 5. Optimize Inputs for Thumb-Typing */
+  .bill-table td {
+    padding: 2px !important;
+  }
+
+  .table-input {
+    font-size: 13px !important; /* Big enough to prevent iOS auto-zoom */
+    width: 100%;
+    text-align: center;
+  }
+
+  /* Keep 'Particulars' text aligned left for readability */
+  .bill-table td:nth-child(2) .table-input {
+    text-align: left;
+    padding-left: 4px;
+  }
+
+  /* Shrink header branding slightly to match the compact table */
+  .shop-name { font-size: 20px; }
+  .shop-subtitle, .contact, .to-section, .bill-info-row { font-size: 12px; }
+}
+
 /* =========================================================
    7. SAVED BILLS PAGE STYLES (Matching the new UI)
    ========================================================= */
@@ -817,7 +900,7 @@
   flex: 1;
   overflow-y: auto;
   padding: 24px 20px 100px 20px;
-  -webkit-overflow-scrolling: touch; /* Buttery smooth scroll on iOS/Mobile */
+  -webkit-overflow-scrolling: touch; 
   will-change: scroll-position;
   overscroll-behavior-y: contain;
 }
@@ -937,9 +1020,9 @@
   font-weight: 600;
   display: -webkit-box;
   -webkit-line-clamp: 2;
-  line-clamp: 2; /* <-- Added standard fallback */
+  line-clamp: 2;
   -webkit-box-orient: vertical;
-  box-orient: vertical; /* <-- Added standard fallback */
+  box-orient: vertical;
   overflow: hidden;
   line-height: 1.5;
 }
@@ -1032,14 +1115,38 @@
   color: #374151;
 }
 
-/* Logout / Danger Buttons */
-.action-btn.danger-outline {
-  border-color: rgba(220, 38, 38, 0.3);
-  color: #dc2626;
-  background: rgba(255, 255, 255, 0.5);
+/* =========================================================
+   8. EXPORT FIX (Forces Desktop Layout During Share/PDF)
+   ========================================================= */
+.force-desktop-capture {
+  width: 700px !important;
+  min-width: 700px !important;
+  max-width: 700px !important;
+  padding: 12px 24px !important;
+  zoom: 1 !important;
+  margin: 0 !important;
 }
 
-.action-btn.danger-outline:hover {
-  background: #fef2f2;
-  border-color: #dc2626;
+/* Restore exact desktop column widths for the snapshot */
+.force-desktop-capture .col-sno { width: 6% !important; }
+.force-desktop-capture .col-particulars { width: 34% !important; }
+.force-desktop-capture .col-qty { width: 24% !important; }
+.force-desktop-capture .col-rate { width: 16% !important; }
+.force-desktop-capture .col-amount { width: 20% !important; }
+
+/* Revert the mobile "Qty" trick back to "Kgs / Bunch" */
+.force-desktop-capture .bill-table th:nth-child(3) {
+  font-size: 13px !important;
+}
+.force-desktop-capture .bill-table th:nth-child(3)::after {
+  content: none !important;
+}
+
+/* Ensure font sizes look correct in the final PDF */
+.force-desktop-capture .bill-table th,
+.force-desktop-capture .table-input {
+  font-size: 13px !important;
+}
+.force-desktop-capture .shop-name {
+  font-size: 24px !important;
 }

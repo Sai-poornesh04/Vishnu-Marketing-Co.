@@ -202,10 +202,32 @@ function Bill() {
     return `${words.trim()} Rupees Only`;
   };
 
-  const renderBillCanvas = async () => {
+ const renderBillCanvas = async () => {
     const el = billPaperRef.current;
     if (!el) throw new Error("Bill not found");
-    return await html2canvas(el, { scale: 2, backgroundColor: "#ffffff", useCORS: true });
+
+    // 1. Force the desktop layout
+    el.classList.add("force-desktop-capture");
+
+    try {
+      // 2. Await a tiny 50ms tick to let the browser repaint the wider DOM
+      // Without this, the picture might snap while it's half-squished
+      await new Promise(resolve => setTimeout(resolve, 50)); 
+      
+      const canvas = await html2canvas(el, { 
+        scale: 2, 
+        backgroundColor: "#ffffff", 
+        useCORS: true,
+        windowWidth: 1024 
+      });
+      
+      return canvas;
+      
+    } finally {
+      // 3. FINALLY BLOCK: Guarantees the layout returns to mobile, 
+      // even if html2canvas totally fails!
+      el.classList.remove("force-desktop-capture");
+    }
   };
 
   const downloadBlob = (blob, filename) => {
@@ -436,11 +458,11 @@ function Bill() {
 
           <table className="bill-table">
             <colgroup>
-              <col style={{ width: "6%" }} />  
-              <col style={{ width: "32%" }} /> 
-              <col style={{ width: "24%" }} /> 
-              <col style={{ width: "20%" }} /> 
-              <col style={{ width: "28%" }} />
+              <col className="col-sno" />  
+              <col className="col-particulars" /> 
+              <col className="col-qty" /> 
+              <col className="col-rate" /> 
+              <col className="col-amount" />
             </colgroup>
             <thead>
               <tr>
