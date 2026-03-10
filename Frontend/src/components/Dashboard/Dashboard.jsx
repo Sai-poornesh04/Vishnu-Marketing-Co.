@@ -104,14 +104,8 @@ function Dashboard() {
 
         {/* --- Quick Stats --- */}
         <div className="dash-stats-grid staggered-2">
-          <div className="stat-card glass-panel premium-hover">
-            <div className="card-glow"></div>
-            <div className="stat-icon revenue levitate">₹</div>
-            <div className="stat-details">
-              <h3>Today's Revenue</h3>
-              <p className="stat-value">₹ {todaysRevenue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-            </div>
-          </div>
+          
+          
           <div className="stat-card glass-panel premium-hover">
             <div className="card-glow"></div>
             <div className="stat-icon count levitate-delay">📄</div>
