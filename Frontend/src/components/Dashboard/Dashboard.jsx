@@ -110,6 +110,10 @@ function Dashboard() {
             <div className="card-glow"></div>
             <div className="stat-icon count levitate-delay">📄</div>
             <div className="stat-details">
+              <h3>Today's Revenue</h3>
+              <p className="stat-value">₹ {todaysRevenue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+            </div>
+            <div className="stat-details">
               <h3>Bills Today</h3>
               <p className="stat-value">{todaysBills.length}</p>
             </div>
