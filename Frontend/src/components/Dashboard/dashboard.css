@@ -52,7 +52,7 @@
 }
 
 /* =========================================================
-   2. PURE iPHONE GLASS NAVBAR
+   2. PURE iPHONE GLASS NAVBAR (GPU Optimized)
    ========================================================= */
 .dash-nav {
   position: relative;
@@ -63,8 +63,9 @@
   padding: 16px 24px 16px 20px;
   margin: 16px 24px 0 24px;
   background: rgba(255, 255, 255, 0.35);
-  backdrop-filter: saturate(180%) blur(24px);
-  -webkit-backdrop-filter: saturate(180%) blur(24px);
+  /* 🔥 Optimized Blur Radius for Mobile GPU */
+  backdrop-filter: saturate(180%) blur(12px);
+  -webkit-backdrop-filter: saturate(180%) blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.8);
   box-shadow: 0 10px 32px rgba(0, 0, 0, 0.06), inset 0 0 0 1px rgba(255, 255, 255, 0.4);
   border-radius: 24px;
@@ -154,12 +155,13 @@
 }
 
 /* =========================================================
-   4. HIGH-END GLASS CARDS & HOVER PHYSICS
+   4. HIGH-END GLASS CARDS & HOVER PHYSICS (GPU Optimized)
    ========================================================= */
 .glass-panel {
   background: rgba(255, 255, 255, 0.65);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  /* 🔥 Optimized Blur Radius for Mobile GPU */
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.7);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.04);
   border-radius: 24px;
@@ -247,6 +249,11 @@
   display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;
 }
 
+button, .action-card, .recent-bill-row {
+  /* 🔥 Native App Trick: Kills the 300ms mobile touch delay */
+  touch-action: manipulation; 
+}
+
 .action-card {
   padding: 28px 24px;
   text-align: left; cursor: pointer;
@@ -255,6 +262,8 @@
   /* Adds the glass edge back so it doesn't look flat */
   border: 1px solid rgba(255, 255, 255, 0.8);
   width: 100%; box-sizing: border-box;
+  /* 🔥 FIX: Prevents the mobile action cards from collapsing */
+  min-height: 160px; 
 }
 
 .action-card h3 { margin: 0 0 8px 0; font-size: 22px; font-weight: 800; color: #111; letter-spacing: -0.5px;}
@@ -309,15 +318,13 @@
 
 .r-bill-info { 
   display: flex; flex-direction: column; gap: 4px; 
-  /* Removing min-width allows the text to naturally wrap instead of truncating */
 }
 
 .r-bill-info strong { 
   color: #111; 
   font-size: 16px; 
-  font-weight: 700;
+  font-weight: 800;
   line-height: 1.3; /* Better spacing for multi-line restaurant names */
-  /* We removed the truncation rules here so the full name shows! */
 }
 
 .r-bill-info span { 
@@ -333,7 +340,7 @@
 }
 
 .r-bill-right strong { 
-  font-size: 18px; color: #111; font-weight: 700;
+  font-size: 18px; color: #111; font-weight: 900;
   white-space: nowrap; /* Keeps the currency symbol attached to the number */
 }
 
@@ -352,13 +359,13 @@
 .staggered-6 { animation: blurReveal 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards 0.3s; opacity: 0; }
 
 @keyframes blurReveal {
-  /* Removed the filter: blur() and used translate3d to force hardware acceleration */
+  /* 🔥 Hardware Accelerated entrance instead of heavy GPU blurs */
   0% { opacity: 0; transform: translate3d(0, 30px, 0) scale(0.98); }
   100% { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
 }
 
 /* =========================================================
-   8. SIDEBAR EXPERT MENU
+   8. SIDEBAR EXPERT MENU (GPU Optimized)
    ========================================================= */
 .sidebar-overlay {
   position: fixed; inset: 0;
@@ -371,7 +378,8 @@
   position: fixed; top: 0; right: 0;
   width: 320px; max-width: 90vw; height: 100dvh;
   background: linear-gradient(160deg, rgba(255, 255, 255, 0.95) 0%, rgba(220, 245, 225, 0.85) 100%);
-  backdrop-filter: saturate(180%) blur(30px); -webkit-backdrop-filter: saturate(180%) blur(30px);
+  /* 🔥 Optimized Blur Radius for Mobile GPU */
+  backdrop-filter: saturate(180%) blur(12px); -webkit-backdrop-filter: saturate(180%) blur(12px);
   border-radius: 32px 0 0 32px; border-left: 1px solid rgba(255, 255, 255, 0.9);
   box-shadow: -20px 0 60px rgba(27, 94, 32, 0.08);
   z-index: 1000;

@@ -1,15 +1,14 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, startTransition } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-// 1. IMPORT VIRTUOSO
-import { Virtuoso } from "react-virtuoso";
-import {
-  fetchSavedBills, clearEditId, openSearch, closeSearch,
-  searchBillsFromDB, setSearchBillNo, setSearchCustomerId,
-  setSearchFromDate, setSearchToDate
+import { Virtuoso } from "react-virtuoso"; 
+import { 
+  fetchSavedBills, clearEditId, openSearch, closeSearch, 
+  searchBillsFromDB, setSearchBillNo, setSearchCustomerId, 
+  setSearchFromDate, setSearchToDate 
 } from "../../slice/billSlice";
 import { deleteSavedBillFromDB, fetchAllSavedBills } from "../../slice/savedBillsSlice";
-import "../Bill/bill.css";
+import "../Bill/bill.css"; 
 
 const ymdToDmy = (v) => {
   const s = String(v || "").slice(0, 10);
@@ -25,10 +24,10 @@ const ymd = (d) => new Date(d).toISOString().slice(0, 10);
 function SavedBills() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-
-  const {
-    savedBills, loading, error, showSearchModal, searchBillNo,
-    searchCustomerId, searchFromDate, searchToDate, searchResults
+  
+  const { 
+    savedBills, loading, error, showSearchModal, searchBillNo, 
+    searchCustomerId, searchFromDate, searchToDate, searchResults 
   } = useSelector((state) => state.bill);
 
   const [confirmId, setConfirmId] = useState(null);
@@ -44,24 +43,21 @@ function SavedBills() {
   };
 
   useEffect(() => {
-    dispatch(fetchSavedBills());
-    // Fetch customers so the search modal can show customer names based on ID
+    if (!savedBills || savedBills.length === 0) {
+      dispatch(fetchSavedBills());
+    }
+    
     fetch("https://vishnu-marketing-co.onrender.com/api/bills/customers/all")
       .then((r) => r.json())
       .then((d) => setCustomers(Array.isArray(d) ? d : []))
       .catch(() => setCustomers([]));
-  }, [dispatch]);
+  }, [dispatch, savedBills]);
 
   const onEdit = (bill) => {
-    dispatch(closeSearch()); // Close modal if open
-    navigate("/bill", { state: { editBill: bill } });
-  };
-
-  const onBackToDashboard = () => {
-    dispatch(clearEditId());
-    setTimeout(() => {
-      navigate("/dashboard", { replace: true });
-    }, 10);
+    dispatch(closeSearch()); 
+    startTransition(() => {
+      navigate("/bill", { state: { editBill: bill } });
+    });
   };
 
   const onDeleteConfirm = async (id) => {
@@ -78,7 +74,6 @@ function SavedBills() {
     }
   };
 
-  // --- Search Modal Helpers ---
   const monthRange = (yyyyMm) => {
     if (!/^\d{4}-\d{2}$/.test(yyyyMm)) return { from: "", to: "" };
     const [y, m] = yyyyMm.split("-").map(Number);
@@ -106,10 +101,19 @@ function SavedBills() {
     <div className="bill-app-container">
       {/* Action Bar */}
       <div className="bill-action-bar">
-        <button className="action-btn outline" onClick={onBackToDashboard}>
+        <button 
+          className="action-btn outline" 
+          /* 🔥 Native App Trick: Fires the exact millisecond the screen is touched */
+          onPointerDown={(e) => {
+            e.preventDefault(); 
+            startTransition(() => {
+              dispatch(clearEditId());
+              navigate("/dashboard", { replace: true });
+            });
+          }}
+        >
           ← Back
         </button>
-        {/* We brought the Search button here! */}
         <button className="action-btn primary" onClick={() => dispatch(openSearch())}>
           🔍 Search Bills
         </button>
@@ -124,7 +128,7 @@ function SavedBills() {
 
         {loading && !showSearchModal && <div className="loading-state">Loading bills...</div>}
         {error && <div className="error-state">{String(error)}</div>}
-
+        
         {!loading && (!savedBills || savedBills.length === 0) && !showSearchModal && (
           <div className="empty-state">
             <div className="empty-icon">📄</div>
@@ -132,7 +136,7 @@ function SavedBills() {
           </div>
         )}
 
-        {/* 2. THE EXPERT FIX: List Virtualization */}
+        {/* 🔥 Virtualized List for Infinite Scrolling Performance */}
         {(!loading && savedBills && savedBills.length > 0) && (
           <div style={{ height: "calc(100vh - 250px)", minHeight: "400px", width: "100%" }}>
             <Virtuoso
@@ -146,7 +150,6 @@ function SavedBills() {
                 const customerLine = [(bill.customerName || "").trim(), (bill.customerAddress || "").trim()].filter(Boolean).join(", ");
 
                 return (
-                  // Added paddingBottom to maintain the visual gap between cards
                   <div style={{ paddingBottom: '16px' }}>
                     <div className="bill-card" style={{ animationDelay: `${(index % 10) * 0.05}s` }}>
                       <div className="bill-card-header">
@@ -182,7 +185,7 @@ function SavedBills() {
         )}
       </div>
 
-      {/* --- SEARCH MODAL (Ported from Bill.jsx) --- */}
+      {/* --- SEARCH MODAL --- */}
       {showSearchModal && (
         <div className="search-modal-overlay">
           <div className="search-modal">

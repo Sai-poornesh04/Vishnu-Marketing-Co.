@@ -1,7 +1,6 @@
-import React, { useEffect, useState, startTransition } from "react";
+import React, { useEffect, useState, startTransition, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-// 1. Reverted to fetchSavedBills so it doesn't collide with the Search Modal
 import { fetchSavedBills, resetBill, clearEditId } from "../../slice/billSlice";
 import "./dashboard.css";
 import logo from "../../assets/VM-logo.png";
@@ -15,18 +14,15 @@ function Dashboard() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   useEffect(() => {
-    // 🔥 THE FIX: Client-Side Caching
+    // 🔥 Client-Side Caching
     // If Redux already has the bills in memory, DO NOT hit the database!
-    // This stops the re-fetching on the Back button. It will only fetch on a hard reload.
     if (savedBills && savedBills.length > 0) {
       return; 
     }
-
     dispatch(fetchSavedBills());
   }, [dispatch, savedBills]);
 
   const handleNewBill = () => {
-    // startTransition keeps the button tap instant without freezing the UI
     startTransition(() => {
       dispatch(resetBill());
       dispatch(clearEditId());
@@ -39,29 +35,44 @@ function Dashboard() {
     navigate("/", { replace: true });
   };
 
-  // 🔥 CPU OPTIMIZATION: Even if Redux holds 5,000 bills in memory, 
-  // we only slice out the last 30 days to do our math on, keeping the phone lightning fast.
-  const todayObj = new Date();
-  const thirtyDaysAgo = new Date();
-  thirtyDaysAgo.setDate(todayObj.getDate() - 30);
-  const cutoffDateStr = thirtyDaysAgo.toISOString().slice(0, 10);
+  // 🔥 THE EXPERT MOBILE FIX: Single-Pass O(n) Memorization
+  const { todaysRevenue, todaysBillsCount, recentBills } = useMemo(() => {
+    if (!savedBills || savedBills.length === 0) {
+      return { todaysRevenue: 0, todaysBillsCount: 0, recentBills: [] };
+    }
 
-  const recent30DaysBills = (savedBills || []).filter(b => {
-     const bDate = String(b.billDate || b.date).slice(0, 10);
-     return bDate >= cutoffDateStr;
-  });
+    const todayObj = new Date();
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(todayObj.getDate() - 30);
+    
+    const cutoffDateStr = thirtyDaysAgo.toISOString().slice(0, 10);
+    const todayStr = todayObj.toISOString().slice(0, 10);
 
-  const todayStr = todayObj.toISOString().slice(0, 10);
-  const todaysBills = recent30DaysBills.filter(
-    (b) => String(b.billDate || b.date).slice(0, 10) === todayStr
-  );
-  
-  const todaysRevenue = todaysBills.reduce(
-    (sum, b) => sum + Number(b.totalAmount || b.total || 0),
-    0
-  );
+    let revenue = 0;
+    let todayCount = 0;
+    const recent30 = [];
 
-  const recentBills = recent30DaysBills.slice(0, 3);
+    // Looping through the array ONCE is infinitely faster for mobile CPUs
+    for (let i = 0; i < savedBills.length; i++) {
+      const b = savedBills[i];
+      const bDate = String(b.billDate || b.date).slice(0, 10);
+
+      if (bDate >= cutoffDateStr) {
+        recent30.push(b);
+        
+        if (bDate === todayStr) {
+          todayCount++;
+          revenue += Number(b.totalAmount || b.total || 0);
+        }
+      }
+    }
+
+    return {
+      todaysRevenue: revenue,
+      todaysBillsCount: todayCount,
+      recentBills: recent30.slice(0, 3) 
+    };
+  }, [savedBills]);
 
   return (
     <div className="dash-container">
@@ -90,10 +101,10 @@ function Dashboard() {
           <button className="sidebar-link-btn" onClick={() => setIsMenuOpen(false)}>
             <span className="sidebar-icon">👤</span> Profile
           </button>
-          <button className="sidebar-link-btn" onClick={() => { setIsMenuOpen(false); navigate("/customers"); }}>
+          <button className="sidebar-link-btn" onClick={() => { setIsMenuOpen(false); startTransition(() => navigate("/customers")); }}>
             <span className="sidebar-icon">👥</span> Customers
           </button>
-          <button className="sidebar-link-btn" onClick={() => { setIsMenuOpen(false); navigate("/saved-bills"); }}>
+          <button className="sidebar-link-btn" onClick={() => { setIsMenuOpen(false); startTransition(() => navigate("/saved-bills")); }}>
             <span className="sidebar-icon">📂</span> Saved Bills
           </button>
         </div>
@@ -143,7 +154,7 @@ function Dashboard() {
             <div className="stat-icon count levitate-delay">📄</div>
             <div className="stat-details">
               <h3>Bills Today</h3>
-              <p className="stat-value">{todaysBills.length}</p>
+              <p className="stat-value">{todaysBillsCount}</p>
             </div>
           </div>
         </div>
