@@ -202,7 +202,7 @@ function Bill() {
     return `${words.trim()} Rupees Only`;
   };
 
- const renderBillCanvas = async () => {
+  const renderBillCanvas = async () => {
     const el = billPaperRef.current;
     if (!el) throw new Error("Bill not found");
 
@@ -212,17 +212,17 @@ function Bill() {
     try {
       // 2. Await a tiny 50ms tick to let the browser repaint the wider DOM
       // Without this, the picture might snap while it's half-squished
-      await new Promise(resolve => setTimeout(resolve, 50)); 
-      
-      const canvas = await html2canvas(el, { 
-        scale: 2, 
-        backgroundColor: "#ffffff", 
+      await new Promise(resolve => setTimeout(resolve, 50));
+
+      const canvas = await html2canvas(el, {
+        scale: 2,
+        backgroundColor: "#ffffff",
         useCORS: true,
-        windowWidth: 1024 
+        windowWidth: 1024
       });
-      
+
       return canvas;
-      
+
     } finally {
       // 3. FINALLY BLOCK: Guarantees the layout returns to mobile, 
       // even if html2canvas totally fails!
@@ -366,7 +366,15 @@ function Bill() {
 
       {/* Action Bar */}
       <div className="bill-action-bar">
-        <button className="action-btn outline" onClick={() => navigate("/dashboard", { replace: true })}>
+        <button 
+          className="action-btn outline" 
+          onClick={() => {
+            // Yield to the main thread for 10ms so the button tap visually registers instantly
+            setTimeout(() => {
+              navigate("/dashboard", { replace: true });
+            }, 10);
+          }}
+        >
           ← Back
         </button>
 
@@ -458,10 +466,10 @@ function Bill() {
 
           <table className="bill-table">
             <colgroup>
-              <col className="col-sno" />  
-              <col className="col-particulars" /> 
-              <col className="col-qty" /> 
-              <col className="col-rate" /> 
+              <col className="col-sno" />
+              <col className="col-particulars" />
+              <col className="col-qty" />
+              <col className="col-rate" />
               <col className="col-amount" />
             </colgroup>
             <thead>

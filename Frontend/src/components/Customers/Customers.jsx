@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "../Bill/bill.css"; 
+import "../Bill/bill.css";
 import "./customer.css";
 
 const API = "https://vishnu-marketing-co.onrender.com/api/customers";
@@ -60,7 +60,7 @@ export default function Customers() {
 
   useEffect(() => {
     load();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const isDirty = (r) =>
@@ -140,7 +140,7 @@ export default function Customers() {
   const saveAll = async () => {
     const dirty = rows.filter(isDirty);
     if (dirty.length === 0) return;
-    
+
     let successCount = 0;
     for (const r of dirty) {
       await save(r);
@@ -170,7 +170,9 @@ export default function Customers() {
   const dirtyCount = useMemo(() => rows.filter(isDirty).length, [rows]);
 
   const onBackToDashboard = () => {
-    navigate("/dashboard", { replace: true });
+    setTimeout(() => {
+      navigate("/dashboard", { replace: true });
+    }, 10);
   };
 
   const onLogout = () => {
@@ -185,10 +187,10 @@ export default function Customers() {
         <button className="action-btn outline" onClick={onBackToDashboard}>
           ← Back
         </button>
-        
-        <button 
-          className={`action-btn ${dirtyCount > 0 ? "primary" : "outline"}`} 
-          onClick={saveAll} 
+
+        <button
+          className={`action-btn ${dirtyCount > 0 ? "primary" : "outline"}`}
+          onClick={saveAll}
           disabled={dirtyCount === 0 || savingId != null}
         >
           {savingId ? "Saving..." : `💾 Save All (${dirtyCount})`}
@@ -222,7 +224,7 @@ export default function Customers() {
             <button className="action-btn primary" onClick={() => setShowAddModal(true)}>
               ➕ Add Customer
             </button>
-            
+
             <label className={`toggle-pill ${onlyChanged ? 'active' : ''}`}>
               <input
                 type="checkbox"
@@ -232,7 +234,7 @@ export default function Customers() {
               />
               {onlyChanged ? "Showing Changed" : "Show Changed"}
             </label>
-            
+
             <button className="refresh-btn" onClick={load} disabled={loading || savingId != null}>
               🔄 Refresh
             </button>
@@ -314,23 +316,23 @@ export default function Customers() {
             <form onSubmit={handleAddCustomer} className="search-inputs">
               <div className="search-input-group">
                 <label>Customer Name *</label>
-                <input 
+                <input
                   autoFocus
-                  value={newCust.name} 
-                  onChange={e => setNewCust({...newCust, name: e.target.value})} 
+                  value={newCust.name}
+                  onChange={e => setNewCust({ ...newCust, name: e.target.value })}
                   placeholder="e.g. Masaladhar Tadaka restaurant"
                   required
                 />
               </div>
               <div className="search-input-group">
                 <label>Address</label>
-                <input 
-                  value={newCust.address} 
-                  onChange={e => setNewCust({...newCust, address: e.target.value})} 
+                <input
+                  value={newCust.address}
+                  onChange={e => setNewCust({ ...newCust, address: e.target.value })}
                   placeholder="e.g. M6 Velachery Chennai"
                 />
               </div>
-              
+
               <div className="search-buttons" style={{ marginTop: "10px" }}>
                 <button type="button" className="action-btn outline" onClick={() => setShowAddModal(false)}>
                   Cancel

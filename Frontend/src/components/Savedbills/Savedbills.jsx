@@ -2,14 +2,14 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 // 1. IMPORT VIRTUOSO
-import { Virtuoso } from "react-virtuoso"; 
-import { 
-  fetchSavedBills, clearEditId, openSearch, closeSearch, 
-  searchBillsFromDB, setSearchBillNo, setSearchCustomerId, 
-  setSearchFromDate, setSearchToDate 
+import { Virtuoso } from "react-virtuoso";
+import {
+  fetchSavedBills, clearEditId, openSearch, closeSearch,
+  searchBillsFromDB, setSearchBillNo, setSearchCustomerId,
+  setSearchFromDate, setSearchToDate
 } from "../../slice/billSlice";
 import { deleteSavedBillFromDB, fetchAllSavedBills } from "../../slice/savedBillsSlice";
-import "../Bill/bill.css"; 
+import "../Bill/bill.css";
 
 const ymdToDmy = (v) => {
   const s = String(v || "").slice(0, 10);
@@ -25,10 +25,10 @@ const ymd = (d) => new Date(d).toISOString().slice(0, 10);
 function SavedBills() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  
-  const { 
-    savedBills, loading, error, showSearchModal, searchBillNo, 
-    searchCustomerId, searchFromDate, searchToDate, searchResults 
+
+  const {
+    savedBills, loading, error, showSearchModal, searchBillNo,
+    searchCustomerId, searchFromDate, searchToDate, searchResults
   } = useSelector((state) => state.bill);
 
   const [confirmId, setConfirmId] = useState(null);
@@ -59,7 +59,9 @@ function SavedBills() {
 
   const onBackToDashboard = () => {
     dispatch(clearEditId());
-    navigate("/dashboard", { replace: true });
+    setTimeout(() => {
+      navigate("/dashboard", { replace: true });
+    }, 10);
   };
 
   const onDeleteConfirm = async (id) => {
@@ -122,7 +124,7 @@ function SavedBills() {
 
         {loading && !showSearchModal && <div className="loading-state">Loading bills...</div>}
         {error && <div className="error-state">{String(error)}</div>}
-        
+
         {!loading && (!savedBills || savedBills.length === 0) && !showSearchModal && (
           <div className="empty-state">
             <div className="empty-icon">📄</div>
