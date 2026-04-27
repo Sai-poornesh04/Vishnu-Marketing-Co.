@@ -1,19 +1,30 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchSavedBills, resetBill, clearEditId } from "../../slice/billSlice";
+// 1. Updated Import: Using searchBillsFromDB to limit payload
+import { searchBillsFromDB, resetBill, clearEditId } from "../../slice/billSlice";
 import "./dashboard.css";
 import logo from "../../assets/VM-logo.png";
 
 function Dashboard() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { savedBills, loading } = useSelector((state) => state.bill);
+  
+  // 2. Updated Selector: Pulling searchResults instead of the massive savedBills array
+  const { searchResults, loading } = useSelector((state) => state.bill);
   
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
+  // 3. Updated useEffect: Fetches only the last 30 days of data
   useEffect(() => {
-    dispatch(fetchSavedBills());
+    const today = new Date();
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(today.getDate() - 30);
+
+    dispatch(searchBillsFromDB({
+      fromDate: thirtyDaysAgo.toISOString().slice(0, 10),
+      toDate: today.toISOString().slice(0, 10)
+    }));
   }, [dispatch]);
 
   const handleNewBill = () => {
@@ -22,16 +33,20 @@ function Dashboard() {
     navigate("/bill");
   };
 
-  const today = new Date().toISOString().slice(0, 10);
-  const todaysBills = (savedBills || []).filter(
-    (b) => String(b.billDate || b.date).slice(0, 10) === today
+  // 4. Updated Math Variables: Calculating stats safely from the optimized 30-day payload
+  const safeBills = searchResults || [];
+  const todayStr = new Date().toISOString().slice(0, 10);
+  
+  const todaysBills = safeBills.filter(
+    (b) => String(b.billDate || b.date).slice(0, 10) === todayStr
   );
+  
   const todaysRevenue = todaysBills.reduce(
     (sum, b) => sum + Number(b.totalAmount || b.total || 0),
     0
   );
 
-  const recentBills = (savedBills || []).slice(0, 3);
+  const recentBills = safeBills.slice(0, 3);
 
   const onLogout = () => {
     localStorage.removeItem("token");
@@ -75,7 +90,7 @@ function Dashboard() {
 
         <div className="sidebar-footer">
           <button className="sidebar-logout-btn" onClick={onLogout}>
-            <span className="sidebar-icon"></span> Logout
+            <span className="sidebar-icon">🚪</span> Logout
           </button>
         </div>
       </div>

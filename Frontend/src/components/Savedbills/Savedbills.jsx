@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
+// 1. IMPORT VIRTUOSO
+import { Virtuoso } from "react-virtuoso"; 
 import { 
   fetchSavedBills, clearEditId, openSearch, closeSearch, 
   searchBillsFromDB, setSearchBillNo, setSearchCustomerId, 
@@ -128,44 +130,54 @@ function SavedBills() {
           </div>
         )}
 
-        <div className="bills-grid">
-          {(savedBills || []).map((bill, index) => {
-            const billDate = ymdToDmy(bill.billDate || bill.date || "");
-            const total = Number(bill.totalAmount ?? bill.total ?? 0);
-            const isConfirming = confirmId === bill.id;
-            const isDeleting = deletingId === bill.id;
-            const customerLine = [(bill.customerName || "").trim(), (bill.customerAddress || "").trim()].filter(Boolean).join(", ");
+        {/* 2. THE EXPERT FIX: List Virtualization */}
+        {(!loading && savedBills && savedBills.length > 0) && (
+          <div style={{ height: "calc(100vh - 250px)", minHeight: "400px", width: "100%" }}>
+            <Virtuoso
+              style={{ height: "100%" }}
+              data={savedBills}
+              itemContent={(index, bill) => {
+                const billDate = ymdToDmy(bill.billDate || bill.date || "");
+                const total = Number(bill.totalAmount ?? bill.total ?? 0);
+                const isConfirming = confirmId === bill.id;
+                const isDeleting = deletingId === bill.id;
+                const customerLine = [(bill.customerName || "").trim(), (bill.customerAddress || "").trim()].filter(Boolean).join(", ");
 
-            return (
-              <div key={bill.id ?? index} className="bill-card" style={{ animationDelay: `${index * 0.05}s` }}>
-                <div className="bill-card-header">
-                  <span className="bill-card-no">#{bill.billNo}</span>
-                  <span className="bill-card-date">{billDate}</span>
-                </div>
-                <div className="bill-card-body">
-                  <div className="bill-card-customer">
-                    <span className="icon">👤</span> {customerLine || bill.customerName || "Unknown Customer"}
-                  </div>
-                  <div className="bill-card-total">₹{total.toFixed(2)}</div>
-                </div>
-                <div className="bill-card-actions">
-                  <button className="card-btn edit" onClick={() => onEdit(bill)} disabled={isDeleting || isConfirming}>
-                    ✏️ Edit / View
-                  </button>
-                  {!isConfirming ? (
-                    <button className="card-btn delete" onClick={() => setConfirmId(bill.id)} disabled={isDeleting}>🗑️ Delete</button>
-                  ) : (
-                    <div className="card-confirm-actions">
-                      <span className="confirm-msg">Sure?</span>
-                      <button className="card-btn confirm-yes" onClick={() => onDeleteConfirm(bill.id)} disabled={isDeleting}>{isDeleting ? "..." : "Yes"}</button>
-                      <button className="card-btn confirm-no" onClick={() => setConfirmId(null)}>No</button>
+                return (
+                  // Added paddingBottom to maintain the visual gap between cards
+                  <div style={{ paddingBottom: '16px' }}>
+                    <div className="bill-card" style={{ animationDelay: `${(index % 10) * 0.05}s` }}>
+                      <div className="bill-card-header">
+                        <span className="bill-card-no">#{bill.billNo}</span>
+                        <span className="bill-card-date">{billDate}</span>
+                      </div>
+                      <div className="bill-card-body">
+                        <div className="bill-card-customer">
+                          <span className="icon">👤</span> {customerLine || bill.customerName || "Unknown Customer"}
+                        </div>
+                        <div className="bill-card-total">₹{total.toFixed(2)}</div>
+                      </div>
+                      <div className="bill-card-actions">
+                        <button className="card-btn edit" onClick={() => onEdit(bill)} disabled={isDeleting || isConfirming}>
+                          ✏️ Edit / View
+                        </button>
+                        {!isConfirming ? (
+                          <button className="card-btn delete" onClick={() => setConfirmId(bill.id)} disabled={isDeleting}>🗑️ Delete</button>
+                        ) : (
+                          <div className="card-confirm-actions">
+                            <span className="confirm-msg">Sure?</span>
+                            <button className="card-btn confirm-yes" onClick={() => onDeleteConfirm(bill.id)} disabled={isDeleting}>{isDeleting ? "..." : "Yes"}</button>
+                            <button className="card-btn confirm-no" onClick={() => setConfirmId(null)}>No</button>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
+                  </div>
+                );
+              }}
+            />
+          </div>
+        )}
       </div>
 
       {/* --- SEARCH MODAL (Ported from Bill.jsx) --- */}
