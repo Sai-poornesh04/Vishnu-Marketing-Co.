@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, startTransition } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-// 1. Updated Import: Using searchBillsFromDB to limit payload
-import { searchBillsFromDB, resetBill, clearEditId } from "../../slice/billSlice";
+// 1. Reverted to fetchSavedBills so it doesn't collide with the Search Modal
+import { fetchSavedBills, resetBill, clearEditId } from "../../slice/billSlice";
 import "./dashboard.css";
 import logo from "../../assets/VM-logo.png";
 
@@ -10,34 +10,49 @@ function Dashboard() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   
-  // 2. Updated Selector: Pulling searchResults instead of the massive savedBills array
-  const { searchResults, loading } = useSelector((state) => state.bill);
-  
+  // Pulling the main savedBills array from Redux memory
+  const { savedBills, loading } = useSelector((state) => state.bill);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  // 3. Updated useEffect: Fetches only the last 30 days of data
   useEffect(() => {
-    const today = new Date();
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(today.getDate() - 30);
+    // 🔥 THE FIX: Client-Side Caching
+    // If Redux already has the bills in memory, DO NOT hit the database!
+    // This stops the re-fetching on the Back button. It will only fetch on a hard reload.
+    if (savedBills && savedBills.length > 0) {
+      return; 
+    }
 
-    dispatch(searchBillsFromDB({
-      fromDate: thirtyDaysAgo.toISOString().slice(0, 10),
-      toDate: today.toISOString().slice(0, 10)
-    }));
-  }, [dispatch]);
+    dispatch(fetchSavedBills());
+  }, [dispatch, savedBills]);
 
   const handleNewBill = () => {
-    dispatch(resetBill());
-    dispatch(clearEditId());
-    navigate("/bill");
+    // startTransition keeps the button tap instant without freezing the UI
+    startTransition(() => {
+      dispatch(resetBill());
+      dispatch(clearEditId());
+      navigate("/bill");
+    });
   };
 
-  // 4. Updated Math Variables: Calculating stats safely from the optimized 30-day payload
-  const safeBills = searchResults || [];
-  const todayStr = new Date().toISOString().slice(0, 10);
-  
-  const todaysBills = safeBills.filter(
+  const onLogout = () => {
+    localStorage.removeItem("token");
+    navigate("/", { replace: true });
+  };
+
+  // 🔥 CPU OPTIMIZATION: Even if Redux holds 5,000 bills in memory, 
+  // we only slice out the last 30 days to do our math on, keeping the phone lightning fast.
+  const todayObj = new Date();
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(todayObj.getDate() - 30);
+  const cutoffDateStr = thirtyDaysAgo.toISOString().slice(0, 10);
+
+  const recent30DaysBills = (savedBills || []).filter(b => {
+     const bDate = String(b.billDate || b.date).slice(0, 10);
+     return bDate >= cutoffDateStr;
+  });
+
+  const todayStr = todayObj.toISOString().slice(0, 10);
+  const todaysBills = recent30DaysBills.filter(
     (b) => String(b.billDate || b.date).slice(0, 10) === todayStr
   );
   
@@ -46,12 +61,7 @@ function Dashboard() {
     0
   );
 
-  const recentBills = safeBills.slice(0, 3);
-
-  const onLogout = () => {
-    localStorage.removeItem("token");
-    navigate("/", { replace: true });
-  };
+  const recentBills = recent30DaysBills.slice(0, 3);
 
   return (
     <div className="dash-container">
@@ -59,7 +69,7 @@ function Dashboard() {
       <div className="dash-bg-orbs" aria-hidden="true">
         <div className="orb orb-1"></div>
         <div className="orb orb-2"></div>
-        <div className="orb orb-3"></div> {/* New accent orb */}
+        <div className="orb orb-3"></div>
       </div>
 
       {/* --- Sidebar Menu --- */}
@@ -148,14 +158,14 @@ function Dashboard() {
             <p>Generate a fresh cash/credit bill</p>
           </div>
 
-          <div role="button" className="action-card glass-panel premium-hover" onClick={() => navigate("/saved-bills")}>
+          <div role="button" className="action-card glass-panel premium-hover" onClick={() => startTransition(() => navigate("/saved-bills"))}>
             <div className="card-glow"></div>
             <div className="action-icon pop-in delay-1">📂</div>
             <h3>Saved Bills</h3>
             <p>View, edit, or print past bills</p>
           </div>
 
-          <div role="button" className="action-card glass-panel premium-hover" onClick={() => navigate("/customers")}>
+          <div role="button" className="action-card glass-panel premium-hover" onClick={() => startTransition(() => navigate("/customers"))}>
             <div className="card-glow"></div>
             <div className="action-icon pop-in delay-2">👥</div>
             <h3>Customers</h3>
@@ -166,11 +176,11 @@ function Dashboard() {
         {/* --- Recent Bills --- */}
         <h2 className="section-title staggered-5">Latest Bills</h2>
         <div className="recent-bills-list staggered-6 glass-panel premium-hover">
-          {loading ? (
+          {loading && (!savedBills || savedBills.length === 0) ? (
             <p className="muted-text pulse">Loading latest transactions...</p>
           ) : recentBills.length > 0 ? (
             recentBills.map((bill, idx) => (
-              <div key={bill.id || idx} className="recent-bill-row" onClick={() => navigate("/saved-bills")}>
+              <div key={bill.id || idx} className="recent-bill-row" onClick={() => startTransition(() => navigate("/saved-bills"))}>
                 <div className="r-bill-left">
                   <span className="r-bill-no">#{bill.billNo}</span>
                   <div className="r-bill-info">
